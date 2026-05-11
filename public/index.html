@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>InternX Creator Radar</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <div class="hero-card">
+          <span class="eyebrow">InternX Internal Tool</span>
+          <h1>Creator Radar for BD</h1>
+          <p>幫實習通整理適合合作的職涯創作者與平台帳號，優先鎖定有課程、面試求職內容，以及在 IG 或 Threads 具一定聲量的人選。</p>
+        </div>
+        <div class="metric-grid">
+          <div class="metric-card"><span>候選名單</span><strong id="metric-total">0</strong><p>整合種子名單與搜尋排序</p></div>
+          <div class="metric-card"><span>區間內粉絲</span><strong id="metric-range">0</strong><p>符合 1K - 50K 或待人工複核</p></div>
+          <div class="metric-card"><span>可談課程合作</span><strong id="metric-course">0</strong><p>有課程、工作坊或顧問服務訊號</p></div>
+          <div class="metric-card"><span>優先接洽</span><strong id="metric-priority">0</strong><p>依本機儲存的 BD 狀態統計</p></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="field">
+          <label for="keywords">搜尋主題</label>
+          <textarea id="keywords" rows="3">面試,求職,職涯,課程</textarea>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="minFollowers">最低粉絲</label>
+            <input id="minFollowers" type="number" value="1000" />
+          </div>
+          <div class="field">
+            <label for="maxFollowers">最高粉絲</label>
+            <input id="maxFollowers" type="number" value="50000" />
+          </div>
+          <div class="field">
+            <span>平台</span>
+            <div class="toggle-row">
+              <button class="toggle active" data-platform="instagram">Instagram</button>
+              <button class="toggle active" data-platform="threads">Threads</button>
+            </div>
+          </div>
+        </div>
+        <div class="action-row">
+          <button id="runSearch" class="primary-action">重新搜尋候選創作者</button>
+          <p>系統會依主題、粉絲區間與平台條件重排候選名單，幫 BD 先聚焦最值得接洽的人選。</p>
+        </div>
+      </section>
+
+      <section class="results-header">
+        <div>
+          <span class="eyebrow">Workspace</span>
+          <h2>合作名單工作台</h2>
+        </div>
+        <p>每張卡都能直接記錄內部狀態與備註，資料只存在你的瀏覽器。</p>
+      </section>
+
+      <section id="cardGrid" class="card-grid"></section>
+    </main>
+    <script src="/app.js"></script>
+  </body>
+  </html>
