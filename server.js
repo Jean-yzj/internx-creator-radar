@@ -2,11 +2,11 @@ import http from "node:http";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { seedProfiles } from "./data/seed_profiles.js";
-import { discoverViaCse } from "./lib/cse.js";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+import { discoverCreators, normalizeInput } from "./lib/runtimeDiscovery.js";
+
 const PORT = Number(process.env.PORT || 3000);
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const publicDir = path.join(__dirname, "public");
 
 function sendJson(res, payload, statusCode = 200) {
@@ -26,70 +26,59 @@ function sendFile(res, filePath, contentType) {
   });
 }
 
-function scoreMatch(profile, keywords) {
-  if (!keywords.length) return 0;
-  const haystack = `${profile.name} ${profile.bio} ${(profile.tags || []).join(" ")}`.toLowerCase();
-  return keywords.reduce((total, keyword) => total + (haystack.includes(keyword) ? 1 : 0), 0);
-}
+async function parseRequestBody(req) {
+  return new Promise((resolve, reject) => {
+    let raw = "";
 
-function filterAndRank(profiles, { minFollowers, maxFollowers, platforms, keywords }) {
-  return profiles
-    .filter((profile) => platforms.includes(profile.platform))
-    .filter((profile) => {
-      if (profile.followers == null) return true;
-      return profile.followers >= minFollowers && profile.followers <= maxFollowers;
-    })
-    .map((profile) => ({
-      ...profile,
-      matchedKeywords: scoreMatch(profile, keywords)
-    }))
-    .sort((a, b) => {
-      if (b.matchedKeywords !== a.matchedKeywords) return b.matchedKeywords - a.matchedKeywords;
-      return (b.score || 0) - (a.score || 0);
+    req.on("data", (chunk) => {
+      raw += chunk;
+      if (raw.length > 1024 * 1024) {
+        reject(new Error("Payload too large"));
+        req.destroy();
+      }
     });
+
+    req.on("end", () => {
+      if (!raw) {
+        resolve({});
+        return;
+      }
+
+      try {
+        resolve(JSON.parse(raw));
+      } catch (error) {
+        reject(new Error("Invalid JSON body"));
+      }
+    });
+
+    req.on("error", reject);
+  });
 }
 
-async function handleDiscover(query) {
-  const minFollowers = Number(query.minFollowers || 0);
-  const maxFollowers = Number(query.maxFollowers || 999_999_999);
-  const platforms = (query.platforms || "instagram,threads")
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean);
-  const keywords = (query.keywords || "")
-    .split(/[,\s]+/)
-    .map((item) => item.trim().toLowerCase())
-    .filter(Boolean);
+async function handleDiscover(req, res, requestUrl) {
+  try {
+    const body = req.method === "POST" ? await parseRequestBody(req) : {};
+    const input = normalizeInput({
+      ...Object.fromEntries(requestUrl.searchParams.entries()),
+      ...body,
+    });
+    const data = await discoverCreators(input);
 
-  const seedFiltered = filterAndRank(seedProfiles, { minFollowers, maxFollowers, platforms, keywords });
-
-  const cse = await discoverViaCse({ keywords, platforms });
-  const seenIds = new Set(seedFiltered.map((p) => p.id));
-  const cseFresh = cse.profiles.filter((p) => !seenIds.has(p.id));
-
-  return {
-    profiles: [...seedFiltered, ...cseFresh],
-    meta: {
-      seedTotal: seedProfiles.length,
-      seedMatched: seedFiltered.length,
-      cseEnabled: cse.enabled,
-      cseAdded: cseFresh.length,
-      cseError: cse.error || null
-    }
-  };
+    sendJson(res, data);
+  } catch (error) {
+    sendJson(
+      res,
+      { error: error.message || "Discovery failed" },
+      error.message === "Invalid JSON body" ? 400 : 500,
+    );
+  }
 }
 
 const server = http.createServer(async (req, res) => {
   const requestUrl = new URL(req.url, `http://${req.headers.host}`);
 
   if (requestUrl.pathname === "/api/discover") {
-    try {
-      const payload = await handleDiscover(Object.fromEntries(requestUrl.searchParams.entries()));
-      sendJson(res, payload);
-    } catch (err) {
-      console.error("discover error:", err);
-      sendJson(res, { profiles: [], error: err.message }, 500);
-    }
+    await handleDiscover(req, res, requestUrl);
     return;
   }
 
@@ -104,13 +93,11 @@ const server = http.createServer(async (req, res) => {
     ".css": "text/css; charset=utf-8",
     ".js": "application/javascript; charset=utf-8",
     ".svg": "image/svg+xml",
-    ".ico": "image/x-icon"
+    ".ico": "image/x-icon",
   };
   sendFile(res, assetPath, contentTypes[ext] || "text/plain; charset=utf-8");
 });
 
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`Creator Radar running on http://0.0.0.0:${PORT}`);
-  console.log(`Seed profiles: ${seedProfiles.length}`);
-  console.log(`Google CSE: ${process.env.GOOGLE_CSE_KEY && process.env.GOOGLE_CSE_CX ? "enabled" : "disabled"}`);
 });

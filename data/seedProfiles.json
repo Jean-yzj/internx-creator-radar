@@ -1,0 +1,102 @@
+[
+  {
+    "id": "stella_shinycareer",
+    "name": "職涯小夥伴 Stella",
+    "handle": "stella_shinycareer",
+    "platform": "instagram",
+    "url": "https://www.instagram.com/stella_shinycareer/",
+    "website": "https://portaly.cc/stella_shinycareer/",
+    "followers": 21000,
+    "posts": "200",
+    "bio": "職涯諮詢、求職技巧與 Life Coach 內容，適合做履歷面試 QA、職涯直播與顧問型合作。",
+    "tags": ["職涯諮詢", "履歷面試", "Life Coach", "顧問服務"],
+    "sourceNotes": ["Dcard 職涯小夥伴 Stella", "Portaly"]
+  },
+  {
+    "id": "zizithinking",
+    "name": "小資 Zizi",
+    "handle": "zizithinking",
+    "platform": "instagram",
+    "url": "https://www.instagram.com/zizithinking/",
+    "website": "https://linktr.ee/zoey.cnc",
+    "followers": 198,
+    "posts": "35",
+    "bio": "聚焦職涯內容與個人品牌的小型帳號，目前粉絲較低，但合作門檻相對低，適合追蹤成長性。",
+    "tags": ["自由工作", "職涯諮詢", "個人品牌", "顧問服務"],
+    "sourceNotes": ["Linktree zoey.cnc"]
+  },
+  {
+    "id": "inawang_lifestyle",
+    "name": "Ina Wang",
+    "handle": "inawang_lifestyle",
+    "platform": "instagram",
+    "url": "https://www.instagram.com/inawang_lifestyle/",
+    "website": "https://inawang.com/product/resume-interview-lesson/",
+    "followers": 17000,
+    "posts": "412",
+    "bio": "行銷講師、個人品牌與數位遊牧內容，有明確課程銷售與知識變現能力，適合談課程上架或聯名活動。",
+    "tags": ["求職課程", "履歷面試", "個人品牌", "線上課程"],
+    "sourceNotes": ["Ina Wang 求職必修課"]
+  },
+  {
+    "id": "brenda_lifecoach",
+    "name": "Brenda",
+    "handle": "brenda.lifecoach",
+    "platform": "instagram",
+    "url": "https://www.instagram.com/brenda.lifecoach/",
+    "website": "https://www.coach.com.tw/",
+    "followers": 798,
+    "posts": "366",
+    "bio": "人生教練與職涯轉型內容為主，雖然粉絲低於目標帶，但適合做深度顧問合作與小型社群活動。",
+    "tags": ["職涯轉型", "人生教練", "講座課程", "顧問服務"],
+    "sourceNotes": ["coach.com.tw"]
+  },
+  {
+    "id": "104career_academy",
+    "name": "104 職涯學院",
+    "handle": "104career_academy",
+    "platform": "instagram",
+    "url": "https://www.instagram.com/104career_academy/",
+    "website": "https://portaly.cc/104career_academy",
+    "bio": "大型職涯平台帳號，合作價值高但不完全符合中小型創作者區間，適合作為平台合作參考樣本。",
+    "tags": ["職涯平台", "履歷面試", "課程", "大型品牌"],
+    "sourceNotes": ["104 職涯學院 Portaly"]
+  },
+  {
+    "id": "recruitexpress_tw",
+    "name": "立可人事 Recruit Express",
+    "handle": "recruitexpress_tw",
+    "platform": "instagram",
+    "url": "https://www.instagram.com/recruitexpress_tw/",
+    "website": "https://flufi.me/profile/recruitexpress_tw",
+    "followers": 5824,
+    "posts": "412",
+    "bio": "外商獵頭顧問、履歷面試與求職內容完整，具招聘視角，適合做外商求職問答或職缺合作內容。",
+    "tags": ["獵頭顧問", "履歷面試", "外商求職", "職涯平台"],
+    "sourceNotes": ["Flufi Profile"]
+  },
+  {
+    "id": "emerald_talent",
+    "name": "豐才管顧 Emerald Talent",
+    "handle": "emerald_talent",
+    "platform": "instagram",
+    "url": "https://www.instagram.com/emerald_talent/",
+    "website": "https://linktr.ee/emerald_talent",
+    "bio": "求職輔導與職涯顧問定位明確，資料仍需人工補齊粉絲與內容細節。",
+    "tags": ["求職輔導", "職涯顧問", "線上服務", "LinkedIn"],
+    "sourceNotes": ["Emerald Talent Linktree"]
+  },
+  {
+    "id": "stella_threads",
+    "name": "職涯小夥伴 Stella",
+    "handle": "stella_shinycareer",
+    "platform": "threads",
+    "url": "https://www.threads.net/@stella_shinycareer",
+    "website": "https://portaly.cc/stella_shinycareer/",
+    "followers": 7203,
+    "posts": "275",
+    "bio": "SCPC 國際職業策略規劃師，具資深 HR 與大量諮詢經驗，在 Threads 上有穩定職涯問答內容。",
+    "tags": ["Threads 活躍", "職涯諮詢", "履歷面試", "QA 互動"],
+    "sourceNotes": ["Threads 公開頁面"]
+  }
+]

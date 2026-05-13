@@ -46,7 +46,12 @@
         </div>
         <div class="action-row">
           <button id="runSearch" class="primary-action">重新搜尋候選創作者</button>
-          <p>系統會依主題、粉絲區間與平台條件重排候選名單，幫 BD 先聚焦最值得接洽的人選。</p>
+          <p>系統會真的去外部搜尋公開 IG / Threads 個人頁，再同步簡介、粉絲數、外部網站訊號與新候選名單。</p>
+        </div>
+        <div id="crawlStatus" class="crawl-status">
+          <div class="status-pill">等待首次爬取</div>
+          <p id="crawlSummaryText">尚未執行即時 crawl。</p>
+          <p id="crawlWarningText" class="warning-text"></p>
         </div>
       </section>
 

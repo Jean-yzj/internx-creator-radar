@@ -46,6 +46,29 @@ textarea, input, select {
 .primary-action { padding:14px 22px; background:linear-gradient(135deg,#10162f,#f47d42); color:#fff; font-weight:600; }
 .action-row, .results-header { display:flex; justify-content:space-between; gap:18px; align-items:center; }
 .results-header { margin: 40px 0 18px; align-items:flex-end; }
+.crawl-status {
+  display:grid;
+  gap:10px;
+  padding:16px 18px;
+  border-radius:22px;
+  background:rgba(16,22,47,0.04);
+  border:1px solid rgba(16,22,47,0.08);
+}
+.status-pill {
+  display:inline-flex;
+  width:max-content;
+  padding:7px 12px;
+  border-radius:999px;
+  background:rgba(16,22,47,0.08);
+  color:#314062;
+  font-size:.78rem;
+  font-weight:700;
+}
+.crawl-status[data-state="live"] .status-pill { background:rgba(38, 125, 88, 0.14); color:#186046; }
+.crawl-status[data-state="cached"] .status-pill { background:rgba(12, 61, 144, 0.12); color:#0c3d90; }
+.crawl-status[data-state="error"] .status-pill { background:rgba(183, 49, 59, 0.14); color:#9b1c27; }
+.crawl-status p { margin:0; }
+.warning-text { color:#8e5410; }
 .card-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; }
 .card { padding:24px; }
 .card-top, .stat-row, .link-row { display:flex; justify-content:space-between; gap:14px; }
