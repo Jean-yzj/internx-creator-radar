@@ -74,6 +74,14 @@
         <p>每張卡都能直接記錄內部狀態與備註，資料只存在你的瀏覽器。</p>
       </section>
 
+      <div id="statusFilter" class="status-filter">
+        <button type="button" class="status-chip active" data-status="all">全部 <span class="count" data-count="all">0</span></button>
+        <button type="button" class="status-chip" data-status="priority">優先接洽 <span class="count" data-count="priority">0</span></button>
+        <button type="button" class="status-chip" data-status="watchlist">持續追蹤 <span class="count" data-count="watchlist">0</span></button>
+        <button type="button" class="status-chip" data-status="contacted">已接洽 <span class="count" data-count="contacted">0</span></button>
+        <button type="button" class="status-chip" data-status="new">待評估 <span class="count" data-count="new">0</span></button>
+      </div>
+
       <section id="cardGrid" class="card-grid"></section>
     </main>
     <script src="/app.js"></script>

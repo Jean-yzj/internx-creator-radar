@@ -52,7 +52,11 @@ const elements = {
   chipsAll: document.getElementById("chipsAll"),
   chipsNone: document.getElementById("chipsNone"),
   chipsReset: document.getElementById("chipsReset"),
+  statusFilter: document.getElementById("statusFilter"),
 };
+
+const statusFilterPrefKey = "internx-creator-radar-status-filter";
+let activeStatusFilter = localStorage.getItem(statusFilterPrefKey) || "all";
 
 let savedState = JSON.parse(localStorage.getItem(stateKey) || "{}");
 let currentProfiles = [];
@@ -122,6 +126,31 @@ function persist() {
   localStorage.setItem(stateKey, JSON.stringify(savedState));
 }
 
+function pipelineFor(profile) {
+  const key = `${profile.platform}:${profile.handle}`;
+  return savedState[key]?.pipeline || "new";
+}
+
+function profilesMatchingFilter() {
+  if (activeStatusFilter === "all") return currentProfiles;
+  return currentProfiles.filter((profile) => pipelineFor(profile) === activeStatusFilter);
+}
+
+function renderStatusFilter() {
+  if (!elements.statusFilter) return;
+  const counts = { all: currentProfiles.length, priority: 0, watchlist: 0, contacted: 0, new: 0 };
+  for (const profile of currentProfiles) {
+    const status = pipelineFor(profile);
+    if (counts[status] != null) counts[status] += 1;
+  }
+  elements.statusFilter.querySelectorAll("[data-count]").forEach((el) => {
+    el.textContent = String(counts[el.dataset.count] || 0);
+  });
+  elements.statusFilter.querySelectorAll(".status-chip").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.status === activeStatusFilter);
+  });
+}
+
 function renderMetrics() {
   const inRange = currentProfiles.filter(
     (profile) =>
@@ -173,7 +202,19 @@ function renderStatus(summary = null, error = "") {
 }
 
 function renderCards() {
-  elements.cardGrid.innerHTML = currentProfiles
+  const visible = profilesMatchingFilter();
+
+  if (!visible.length) {
+    if (activeStatusFilter === "all") {
+      elements.cardGrid.innerHTML = `<p class="empty-state">目前沒有符合搜尋條件的候選人，試試放寬粉絲區間或多勾幾個主題 chip。</p>`;
+    } else {
+      const label = { priority: "優先接洽", watchlist: "持續追蹤", contacted: "已接洽", new: "待評估" }[activeStatusFilter] || activeStatusFilter;
+      elements.cardGrid.innerHTML = `<p class="empty-state">沒有候選人被標記為「${label}」。在卡片上的「內部狀態」下拉選單裡標記後，就會出現在這裡。</p>`;
+    }
+    return;
+  }
+
+  elements.cardGrid.innerHTML = visible
     .map((profile) => {
       const key = `${profile.platform}:${profile.handle}`;
       const stored = savedState[key] || {};
@@ -225,6 +266,10 @@ function renderCards() {
       savedState[key] = { ...(savedState[key] || {}), pipeline: event.target.value };
       persist();
       renderMetrics();
+      renderStatusFilter();
+      if (activeStatusFilter !== "all") {
+        renderCards();
+      }
     });
   });
 
@@ -260,11 +305,13 @@ async function loadProfiles() {
 
     currentProfiles = data.profiles || [];
     renderMetrics();
+    renderStatusFilter();
     renderCards();
     renderStatus(data.crawlSummary);
   } catch (error) {
     currentProfiles = [];
     renderMetrics();
+    renderStatusFilter();
     renderCards();
     renderStatus(null, error.message || "搜尋時發生未知問題");
   } finally {
@@ -298,6 +345,17 @@ elements.chipsReset.addEventListener("click", () => {
 });
 
 elements.runSearch.addEventListener("click", loadProfiles);
+
+if (elements.statusFilter) {
+  elements.statusFilter.querySelectorAll(".status-chip").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      activeStatusFilter = btn.dataset.status;
+      localStorage.setItem(statusFilterPrefKey, activeStatusFilter);
+      renderStatusFilter();
+      renderCards();
+    });
+  });
+}
 
 renderChips();
 loadProfiles();
