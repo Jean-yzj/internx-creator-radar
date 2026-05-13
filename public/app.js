@@ -82,7 +82,7 @@ function renderStatus(summary = null, error = "") {
   elements.crawlStatus.querySelector(".status-pill").textContent = `${cacheLabel}爬取完成`;
   elements.crawlSummaryText.textContent =
     `${refreshed} 更新，共跑 ${summary.queriesRun} 組查詢、回收 ${summary.returnedProfiles} 筆候選名單，其中 ${summary.discoveredProfiles} 筆是新爬到的帳號。`;
-  elements.crawlWarningText.textContent = (summary.warnings || []).slice(0, 3).join("；");
+  elements.crawlWarningText.textContent = summary.warningSummary || "";
 }
 
 function renderCards() {
