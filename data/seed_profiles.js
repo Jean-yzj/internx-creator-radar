@@ -1793,5 +1793,285 @@ export const seedProfiles = [
       "https://www.instagram.com/cakeresume.tw/",
       "https://www.instagram.com/reel/C9UXdqbPO9z/ (CakeResume 正式更名為 Cake)"
     ]
+  },
+  {
+    id: "careerdesignlabtw_ig",
+    name: "職涯實驗室 Career Design Lab",
+    handle: "careerdesignlabtw",
+    platform: "instagram",
+    url: "https://www.instagram.com/careerdesignlabtw/",
+    website: null,
+    followers: 6761,
+    posts: null,
+    score: 74,
+    collabAngleShort: "新工作趨勢",
+    bio: "聚焦新世代職場趨勢與技能準備，協助讀者掌握新時代職涯競爭力。",
+    tags: ["職涯諮詢", "職涯轉換", "職涯平台"],
+    sourceNotes: [
+      "https://www.instagram.com/careerdesignlabtw/ (6,761 followers visible in search snippet)"
+    ]
+  },
+  {
+    id: "henrywen_threads",
+    name: "亨利溫｜斜槓創業 x 自媒體品牌教練",
+    handle: "henry.wen",
+    platform: "threads",
+    url: "https://www.threads.com/@henry.wen",
+    website: "https://www.instagram.com/henry.wen/",
+    followers: 31300,
+    posts: null,
+    score: 76,
+    collabAngleShort: "個人品牌斜槓",
+    bio: "台科 MBA、前外商品牌經理；分享斜槓高收入、自律習慣、AI 工具，協助讀者把專業變成個人品牌與知識變現。著有《自媒體斜槓一年，我多存了 250 萬》。",
+    tags: ["個人品牌", "職涯轉換", "Threads 活躍", "線上課程"],
+    sourceNotes: [
+      "https://www.threads.com/@henry.wen (31.3K followers visible)",
+      "https://www.instagram.com/henry.wen/"
+    ]
+  },
+  {
+    id: "anyacheng_ig",
+    name: "矽谷阿雅 Anya Cheng",
+    handle: "anyacheng_siliconvalley",
+    platform: "instagram",
+    url: "https://www.instagram.com/anyacheng_siliconvalley/",
+    website: "https://anyacheng.medium.com",
+    followers: 7228,
+    posts: null,
+    score: 78,
+    collabAngleShort: "矽谷 PM 求職",
+    bio: "前 Meta、eBay、麥當勞電商產品經理，西北大學產品管理與行銷講師；分享在美工作故事、海外求職、矽谷 PM 與行銷知識。",
+    tags: ["外商求職", "職涯轉換", "職涯諮詢", "線上課程"],
+    sourceNotes: [
+      "https://www.instagram.com/anyacheng_siliconvalley/ (7,228 followers visible in search snippet)"
+    ]
+  },
+  {
+    id: "hermitcantus_ig",
+    name: "陳韋丞｜職游創辦人・職涯諮詢師",
+    handle: "hermitcantus",
+    platform: "instagram",
+    url: "https://www.instagram.com/hermitcantus/",
+    website: "https://navicareer.tw/",
+    followers: 4089,
+    posts: 382,
+    score: 76,
+    collabAngleShort: "職涯諮詢培訓",
+    bio: "職游創辦人、職涯諮詢師；500+ 場講座、30,000+ 現場聽眾、2,000+ 小時一對一諮詢，培訓 100+ 位 CNC 國際生涯發展諮詢師。",
+    tags: ["職涯諮詢", "履歷面試", "顧問服務", "課程顧問"],
+    sourceNotes: [
+      "https://www.instagram.com/hermitcantus/ (4,089 followers, 382 posts visible in search snippet)",
+      "https://www.cakeresume.com/77a55e"
+    ]
+  },
+  {
+    id: "workedmoney_ig",
+    name: "下班經濟學｜風傳媒 Podcast",
+    handle: "worked_money",
+    platform: "instagram",
+    url: "https://www.instagram.com/worked_money/",
+    website: "https://podcasts.apple.com/podcast/id1533645986",
+    followers: 113000,
+    posts: null,
+    score: 75,
+    collabAngleShort: "理財職場 Podcast",
+    bio: "風傳媒《下班經濟學》Podcast 官方 IG；理財 × 健康 × 生活 × 房子 × 商戰，每週一、三、五晚 6:00 更新；觀眾大宗為 25–40 歲上班族。",
+    tags: ["職涯平台", "個人品牌"],
+    sourceNotes: [
+      "https://www.instagram.com/worked_money/ (113K followers visible in search snippet)",
+      "https://podcasts.apple.com/podcast/id1533645986"
+    ]
+  },
+  {
+    id: "pmjoe_threads",
+    name: "產品經理喬 PM Joe｜科技業 PM 職涯顧問",
+    handle: "_pmjoe",
+    platform: "threads",
+    url: "https://www.threads.com/@_pmjoe",
+    website: "https://www.instagram.com/_pmjoe/",
+    followers: null,
+    posts: null,
+    score: 75,
+    collabAngleShort: "PM 履歷加薪",
+    bio: "曾任 Canva、MX Player (Zenjoy)、火幣 (Huobi)、美圖國際版 Product Lead；清大資工碩士，提供科技業 PM 職涯顧問、履歷面試、加薪升遷建議，並有免費 PM 面試課程。",
+    tags: ["外商求職", "履歷面試", "職涯諮詢", "線上課程", "Threads 活躍"],
+    sourceNotes: [
+      "https://www.threads.com/@_pmjoe",
+      "https://www.instagram.com/_pmjoe/"
+    ]
+  },
+  {
+    id: "youngtalenttw_ig",
+    name: "YoungTalent｜職場新鮮人的好夥伴",
+    handle: "youngtalent.tw",
+    platform: "instagram",
+    url: "https://www.instagram.com/youngtalent.tw/",
+    website: "https://www.threads.com/@youngtalent.tw",
+    followers: 1094,
+    posts: 131,
+    score: 66,
+    collabAngleShort: "新鮮人職場",
+    bio: "聚焦職場新鮮人，討論職業倦怠期、新人工作調適、初入職場挑戰；同步經營 Threads。",
+    tags: ["應屆求職", "校園實習", "Threads 活躍"],
+    sourceNotes: [
+      "https://www.instagram.com/youngtalent.tw/ (1,094 followers, 131 posts visible in search snippet)",
+      "https://www.threads.com/@youngtalent.tw"
+    ]
+  },
+  {
+    id: "yiting_portaly_ig",
+    name: "職涯諮詢師-怡葶",
+    handle: "yiting",
+    platform: "instagram",
+    url: "https://portaly.cc/yiting",
+    website: "https://portaly.cc/yiting",
+    followers: null,
+    posts: null,
+    score: 64,
+    collabAngleShort: "優勢探索諮詢",
+    bio: "6+ 年職涯發展諮詢經驗，協助上千人自我探索與職涯定位；專長個人優勢辨識、熱情點燃、職涯探索、工作生活平衡及求職力提升。",
+    tags: ["職涯諮詢", "Life Coach", "顧問服務"],
+    sourceNotes: [
+      "https://portaly.cc/yiting (Portaly 服務頁列出 6+ 年經驗、上千人諮詢)"
+    ]
+  },
+  {
+    id: "lily30588_threads",
+    name: "裸辭莉莉｜視覺行銷",
+    handle: "lily30588",
+    platform: "threads",
+    url: "https://www.threads.com/@lily30588",
+    website: null,
+    followers: null,
+    posts: null,
+    score: 64,
+    collabAngleShort: "裸辭轉職",
+    bio: "視覺行銷工作者，分享裸辭、轉職、自由工作心路；曾與職涯小夥伴 Stella 合作推出轉職履歷模板包。",
+    tags: ["職涯轉換", "自由工作", "Threads 活躍"],
+    sourceNotes: [
+      "https://www.threads.com/@lily30588",
+      "https://portaly.cc/resume (與 Stella 合作的轉職履歷模板包)"
+    ]
+  },
+  {
+    id: "shinycareer_ig",
+    name: "Shinycareer｜履歷模板服務",
+    handle: "shinycareer",
+    platform: "instagram",
+    url: "https://www.instagram.com/shinycareer/",
+    website: "https://linktr.ee/stella_shinycareer",
+    followers: 8748,
+    posts: 11,
+    score: 70,
+    collabAngleShort: "轉職履歷模板",
+    bio: "Stella 職涯小夥伴的服務型帳號，主要販售轉職履歷模板包、線上履歷課；以服務頁面為主，貼文精簡但粉絲穩定。",
+    tags: ["履歷面試", "線上課程", "課程顧問"],
+    sourceNotes: [
+      "https://www.instagram.com/shinycareer/ (8,748 followers, 11 posts visible in search snippet)"
+    ]
+  },
+  {
+    id: "blackcatpm_portaly",
+    name: "黑貓 PM｜軟體 PM 月薪超過 10 萬",
+    handle: "blackcatPM",
+    platform: "instagram",
+    url: "https://portaly.cc/blackcatPM",
+    website: "https://portaly.cc/blackcatPM/product/BKcnJcqEoXdWsQ6Ov51V",
+    followers: null,
+    posts: null,
+    score: 66,
+    collabAngleShort: "軟體 PM 求職",
+    bio: "10 年軟體 PM 工作經歷濃縮的履歷面試求職教材；六大主題涵蓋履歷撰寫與面試準備，主打月薪 10 萬以上 PM 職缺。",
+    tags: ["履歷面試", "求職課程", "線上課程", "外商求職"],
+    sourceNotes: [
+      "https://portaly.cc/blackcatPM/product/BKcnJcqEoXdWsQ6Ov51V"
+    ]
+  },
+  {
+    id: "sandyrecruit_ig",
+    name: "Sandy Su｜國際獵頭",
+    handle: "sandyrecruit",
+    platform: "instagram",
+    url: "https://www.instagram.com/sandyrecruit/",
+    website: "https://sandy-hunter.com/",
+    followers: 5663,
+    posts: 437,
+    score: 78,
+    collabAngleShort: "國際獵頭職涯",
+    bio: "20+ 年國際獵頭、Bristol MBA；日本起家、橫跨金融 / IT / 製藥 / 製造 / FMCG / 教育；著有《2030 轉職地圖》，提供國內外職涯諮詢與企業培訓。",
+    tags: ["獵頭顧問", "外商求職", "職涯諮詢", "企業內訓"],
+    sourceNotes: [
+      "https://www.instagram.com/sandyrecruit/ (5,663 followers, 437 posts visible in search snippet)",
+      "https://readingoutpost.com/sandys-recruitment-note/"
+    ]
+  },
+  {
+    id: "adeccotaiwan_ig",
+    name: "Adecco Taiwan｜藝珂人事顧問",
+    handle: "adeccotaiwan",
+    platform: "instagram",
+    url: "https://www.instagram.com/adeccotaiwan/",
+    website: "https://www.adecco.com/zh-tw",
+    followers: 7923,
+    posts: null,
+    score: 68,
+    collabAngleShort: "獵頭顧問 IG",
+    bio: "全球最大 HR 顧問集團 Adecco 台灣官方 IG；分享 HR 解決方案、職缺資訊、職涯目標達成案例。",
+    tags: ["獵頭顧問", "外商求職", "職涯平台"],
+    sourceNotes: [
+      "https://www.instagram.com/adeccotaiwan/ (7,923 followers visible in search snippet)"
+    ]
+  },
+  {
+    id: "salary_tw_threads",
+    name: "比薪水 salary｜薪水懶人包",
+    handle: "salary_tw_",
+    platform: "threads",
+    url: "https://www.threads.com/@salary_tw_",
+    website: null,
+    followers: 4976,
+    posts: null,
+    score: 68,
+    collabAngleShort: "薪資情報",
+    bio: "Threads 上的薪資 / 公司 / 求職資訊整理帳號；提供薪水比較、公司資料與面談薪水技巧，受眾為 25–35 歲求職族群。",
+    tags: ["履歷面試", "Threads 活躍"],
+    sourceNotes: [
+      "https://www.threads.com/@salary_tw_ (4,976 followers visible in search snippet)"
+    ]
+  },
+  {
+    id: "cococareer_threads",
+    name: "Coco｜全遠距工作的行銷人",
+    handle: "coco.career",
+    platform: "threads",
+    url: "https://www.threads.com/@coco.career",
+    website: null,
+    followers: 10600,
+    posts: null,
+    score: 74,
+    collabAngleShort: "遠距行銷職涯",
+    bio: "前醫美 PM、美國 B2B 行銷，現為全遠距 freelancer；分享職涯心得、生產力、自我成長，並開放實習與合作洽詢。",
+    tags: ["職涯轉換", "自由工作", "個人品牌", "Threads 活躍"],
+    sourceNotes: [
+      "https://www.threads.com/@coco.career (10.6K followers visible in search snippet)"
+    ]
+  },
+  {
+    id: "hahowin_ig",
+    name: "Hahow 好學校｜線上課程平台",
+    handle: "hahow.in",
+    platform: "instagram",
+    url: "https://www.instagram.com/hahow.in/",
+    website: "https://hahow.in/",
+    followers: null,
+    posts: null,
+    score: 64,
+    collabAngleShort: "線上課程平台",
+    bio: "亞洲領先的跨領域群眾募資線上學習平台；700+ 老師、課程涵蓋職場技能、程式設計、設計行銷等；學員橫跨台灣、美國、香港、馬來西亞。",
+    tags: ["線上課程", "職涯平台", "課程顧問"],
+    sourceNotes: [
+      "https://www.instagram.com/hahow.in/",
+      "https://hahow.in/joinus"
+    ]
   }
 ];

@@ -126,8 +126,24 @@
               </div>
 
               <div class="field">
-                <label for="keywords">搜尋主題</label>
-                <textarea id="keywords" rows="3">面試,求職,職涯,課程</textarea>
+                <div class="field-head">
+                  <span>主題勾選</span>
+                  <div class="chip-actions">
+                    <button type="button" id="chipsAll" class="link-btn">全選</button>
+                    <button type="button" id="chipsNone" class="link-btn">全清</button>
+                    <button type="button" id="chipsReset" class="link-btn">回預設</button>
+                  </div>
+                </div>
+                <div id="chipGrid" class="chip-grid"></div>
+              </div>
+
+              <div class="field">
+                <label for="keywords">其他關鍵字（自由輸入，逗號分隔）</label>
+                <textarea
+                  id="keywords"
+                  rows="3"
+                  placeholder="例如：北漂, 公職, 教師, 法律"
+                ></textarea>
               </div>
 
               <div class="field-row">
@@ -173,6 +189,30 @@
               <p>卡片改成單欄優先，讓手機上也能順手讀 bio、改狀態、留備註。</p>
             </section>
 
+            <div id="statusFilter" class="status-filter">
+              <button type="button" class="status-chip active" data-status="all">
+                全部 <span class="count" data-count="all">0</span>
+              </button>
+              <button type="button" class="status-chip" data-status="priority">
+                優先接洽 <span class="count" data-count="priority">0</span>
+              </button>
+              <button type="button" class="status-chip" data-status="watchlist">
+                持續追蹤 <span class="count" data-count="watchlist">0</span>
+              </button>
+              <button type="button" class="status-chip" data-status="contacted">
+                已接洽 <span class="count" data-count="contacted">0</span>
+              </button>
+              <button type="button" class="status-chip" data-status="new">
+                待評估 <span class="count" data-count="new">0</span>
+              </button>
+            </div>
+
+            <div id="tagFilter" class="status-filter tag-filter">
+              <button type="button" class="status-chip" id="courseToggle">
+                只看可談課程合作 <span class="count" data-count="course">0</span>
+              </button>
+            </div>
+
             <section id="cardGrid" class="card-grid"></section>
           </section>
 
@@ -204,4 +244,4 @@
     </div>
     <script src="/app.js"></script>
   </body>
-  </html>
+</html>
