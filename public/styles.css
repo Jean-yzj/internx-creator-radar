@@ -32,6 +32,35 @@ p { color: var(--muted); line-height: 1.72; }
 .panel { margin-top: 24px; padding: 24px; display:grid; gap:18px; }
 .field, .mini-field { display:grid; gap:8px; }
 .field label, .field span, .mini-field label { color: var(--muted); font-size:.9rem; }
+.field-head { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+.chip-actions { display:flex; gap:8px; }
+.link-btn {
+  background:none; border:none; padding:4px 8px; cursor:pointer;
+  font:inherit; font-size:.82rem; color:#0c3d90; text-decoration:underline;
+  text-underline-offset:3px; border-radius:8px;
+}
+.link-btn:hover { background:rgba(12,61,144,0.08); }
+.chip-grid {
+  display:flex; flex-wrap:wrap; gap:8px;
+  padding:6px 0;
+}
+.chip {
+  border:1px solid rgba(49,64,98,0.18);
+  background:rgba(255,255,255,0.85);
+  color:#324163;
+  padding:8px 14px;
+  border-radius:999px;
+  font:inherit;
+  font-size:.86rem;
+  cursor:pointer;
+  transition:background .14s ease, color .14s ease, border-color .14s ease;
+}
+.chip:hover { background:rgba(49,64,98,0.08); }
+.chip.active {
+  background:#10162f;
+  color:#fff8ea;
+  border-color:#10162f;
+}
 textarea, input, select {
   width:100%; border:1px solid rgba(49,64,98,0.14); border-radius:16px; padding:14px 16px;
   background:rgba(255,255,255,0.94); color:var(--ink); font:inherit;

@@ -1,4 +1,39 @@
 const stateKey = "internx-creator-radar-state";
+const chipPrefKey = "internx-creator-radar-chips";
+
+const TOPIC_CHIPS = [
+  { id: "interview", label: "面試 / 履歷", keywords: ["面試", "履歷"], defaultOn: true },
+  { id: "jobsearch", label: "求職教學", keywords: ["求職"], defaultOn: true },
+  { id: "career_consult", label: "職涯諮詢", keywords: ["職涯", "Life Coach"], defaultOn: true },
+  { id: "courses", label: "線上課程 / 工作坊", keywords: ["課程", "工作坊", "講座"], defaultOn: true },
+  { id: "resume_review", label: "履歷健檢", keywords: ["履歷健檢"] },
+  { id: "career_change", label: "轉職 / 跨領域", keywords: ["轉職", "跨領域"] },
+  { id: "internship", label: "大學生實習", keywords: ["實習", "校園", "大學"] },
+  { id: "newgrad", label: "應屆 / 新鮮人", keywords: ["應屆", "新鮮人"] },
+  { id: "midcareer", label: "中年轉職", keywords: ["中年", "二度就業"] },
+  { id: "women", label: "女性職場", keywords: ["女性", "媽媽"] },
+  { id: "overseas", label: "海外 / 海歸", keywords: ["海外", "外派"] },
+  { id: "humanities", label: "文組求職", keywords: ["文組"] },
+  { id: "introvert", label: "內向轉職", keywords: ["內向"] },
+  { id: "engineer", label: "軟體工程師", keywords: ["工程師", "軟體", "Leetcode"] },
+  { id: "pm", label: "PM 產品經理", keywords: ["PM", "產品經理"] },
+  { id: "marketing", label: "行銷 / 廣告", keywords: ["行銷", "廣告", "數位行銷"] },
+  { id: "design", label: "設計師 (UI/UX)", keywords: ["設計師", "UI", "UX", "作品集"] },
+  { id: "data", label: "數據分析", keywords: ["數據", "Data", "分析師"] },
+  { id: "consulting", label: "顧問業", keywords: ["顧問業", "consulting"] },
+  { id: "mba", label: "MBA / 商學院", keywords: ["MBA", "商學院"] },
+  { id: "finance", label: "金融 / 銀行", keywords: ["金融", "銀行"] },
+  { id: "hr", label: "HR 人資", keywords: ["HR", "人資"] },
+  { id: "recruiter", label: "獵頭 Recruiter", keywords: ["獵頭", "recruiter"] },
+  { id: "foreign", label: "外商求職", keywords: ["外商"] },
+  { id: "branding", label: "個人品牌", keywords: ["個人品牌"] },
+  { id: "ai", label: "AI × 職涯", keywords: ["AI", "ChatGPT"] },
+  { id: "freelance", label: "自由工作 / 接案", keywords: ["freelancer", "接案", "自由工作"] },
+  { id: "sidehustle", label: "副業 / 斜槓", keywords: ["副業", "斜槓"] },
+  { id: "salary", label: "薪資談判", keywords: ["薪資", "談薪", "薪水"] },
+  { id: "workplace", label: "職場觀察", keywords: ["職場", "上班族"] },
+];
+
 const elements = {
   keywords: document.getElementById("keywords"),
   minFollowers: document.getElementById("minFollowers"),
@@ -13,10 +48,62 @@ const elements = {
   crawlSummaryText: document.getElementById("crawlSummaryText"),
   crawlWarningText: document.getElementById("crawlWarningText"),
   toggles: [...document.querySelectorAll(".toggle")],
+  chipGrid: document.getElementById("chipGrid"),
+  chipsAll: document.getElementById("chipsAll"),
+  chipsNone: document.getElementById("chipsNone"),
+  chipsReset: document.getElementById("chipsReset"),
 };
 
 let savedState = JSON.parse(localStorage.getItem(stateKey) || "{}");
 let currentProfiles = [];
+
+function loadChipSelection() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(chipPrefKey) || "null");
+    if (Array.isArray(stored)) return new Set(stored);
+  } catch (error) {
+    // fall through to defaults
+  }
+  return new Set(TOPIC_CHIPS.filter((chip) => chip.defaultOn).map((chip) => chip.id));
+}
+
+let activeChipIds = loadChipSelection();
+
+function persistChips() {
+  localStorage.setItem(chipPrefKey, JSON.stringify([...activeChipIds]));
+}
+
+function renderChips() {
+  elements.chipGrid.innerHTML = TOPIC_CHIPS.map((chip) => {
+    const active = activeChipIds.has(chip.id) ? "active" : "";
+    return `<button type="button" class="chip ${active}" data-chip-id="${chip.id}">${chip.label}</button>`;
+  }).join("");
+
+  elements.chipGrid.querySelectorAll(".chip").forEach((button) => {
+    button.addEventListener("click", () => {
+      const id = button.dataset.chipId;
+      if (activeChipIds.has(id)) {
+        activeChipIds.delete(id);
+        button.classList.remove("active");
+      } else {
+        activeChipIds.add(id);
+        button.classList.add("active");
+      }
+      persistChips();
+    });
+  });
+}
+
+function collectKeywords() {
+  const fromChips = TOPIC_CHIPS.filter((chip) => activeChipIds.has(chip.id)).flatMap(
+    (chip) => chip.keywords,
+  );
+  const fromText = (elements.keywords.value || "")
+    .split(/[,\n、\s]+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+  return [...new Set([...fromChips, ...fromText])];
+}
 
 function formatFollowers(value) {
   if (!value) return "待確認";
@@ -151,8 +238,9 @@ function renderCards() {
 }
 
 async function loadProfiles() {
+  const keywords = collectKeywords();
   const params = new URLSearchParams({
-    keywords: elements.keywords.value,
+    keywords: keywords.join(","),
     minFollowers: elements.minFollowers.value,
     maxFollowers: elements.maxFollowers.value,
     platforms: getPlatforms().join(","),
@@ -191,5 +279,25 @@ elements.toggles.forEach((button) => {
   });
 });
 
+elements.chipsAll.addEventListener("click", () => {
+  activeChipIds = new Set(TOPIC_CHIPS.map((chip) => chip.id));
+  persistChips();
+  renderChips();
+});
+
+elements.chipsNone.addEventListener("click", () => {
+  activeChipIds = new Set();
+  persistChips();
+  renderChips();
+});
+
+elements.chipsReset.addEventListener("click", () => {
+  activeChipIds = new Set(TOPIC_CHIPS.filter((chip) => chip.defaultOn).map((chip) => chip.id));
+  persistChips();
+  renderChips();
+});
+
 elements.runSearch.addEventListener("click", loadProfiles);
+
+renderChips();
 loadProfiles();

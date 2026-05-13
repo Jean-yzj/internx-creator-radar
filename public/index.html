@@ -24,8 +24,19 @@
 
       <section class="panel">
         <div class="field">
-          <label for="keywords">搜尋主題</label>
-          <textarea id="keywords" rows="3">面試,求職,職涯,課程</textarea>
+          <div class="field-head">
+            <span>主題勾選</span>
+            <div class="chip-actions">
+              <button type="button" id="chipsAll" class="link-btn">全選</button>
+              <button type="button" id="chipsNone" class="link-btn">全清</button>
+              <button type="button" id="chipsReset" class="link-btn">回預設</button>
+            </div>
+          </div>
+          <div id="chipGrid" class="chip-grid"></div>
+        </div>
+        <div class="field">
+          <label for="keywords">其他關鍵字（自由輸入，逗號分隔）</label>
+          <textarea id="keywords" rows="2" placeholder="例如：北漂, 公職, 教師, 法律"></textarea>
         </div>
         <div class="field-row">
           <div class="field">
