@@ -53,13 +53,109 @@ const elements = {
   chipsNone: document.getElementById("chipsNone"),
   chipsReset: document.getElementById("chipsReset"),
   statusFilter: document.getElementById("statusFilter"),
+  courseToggle: document.getElementById("courseToggle"),
 };
 
 const statusFilterPrefKey = "internx-creator-radar-status-filter";
-let activeStatusFilter = localStorage.getItem(statusFilterPrefKey) || "all";
+const courseOnlyPrefKey = "internx-creator-radar-course-only";
+const stateMigrationFlagKey = "internx-creator-radar-state-migrated-v2";
 
+const COURSE_TAGS = new Set(["線上課程", "顧問服務", "講座課程", "求職課程", "課程顧問", "企業內訓"]);
+const PIPELINE_ORDER = { contacted: 4, priority: 3, watchlist: 2, new: 1 };
+
+let activeStatusFilter = localStorage.getItem(statusFilterPrefKey) || "all";
+let courseOnly = localStorage.getItem(courseOnlyPrefKey) === "1";
 let savedState = JSON.parse(localStorage.getItem(stateKey) || "{}");
-let currentProfiles = [];
+
+// One-time migration: collapse "{platform}:{handle}" keys into "{handle}" so a creator's
+// state survives the IG+Threads card merge.
+if (!localStorage.getItem(stateMigrationFlagKey)) {
+  const migrated = {};
+  for (const [key, value] of Object.entries(savedState)) {
+    const handle = (key.includes(":") ? key.split(":").pop() : key).toLowerCase();
+    if (!migrated[handle]) {
+      migrated[handle] = { ...value };
+      continue;
+    }
+    const existing = migrated[handle];
+    const newPipelineRank = PIPELINE_ORDER[value.pipeline] || 0;
+    const existingPipelineRank = PIPELINE_ORDER[existing.pipeline] || 0;
+    if (newPipelineRank > existingPipelineRank) existing.pipeline = value.pipeline;
+    const memos = [existing.memo, value.memo].filter(Boolean);
+    if (memos.length === 2 && memos[0] !== memos[1]) {
+      existing.memo = memos.join("\n---\n");
+    } else if (memos[0]) {
+      existing.memo = memos[0];
+    }
+  }
+  savedState = migrated;
+  localStorage.setItem(stateKey, JSON.stringify(savedState));
+  localStorage.setItem(stateMigrationFlagKey, "1");
+}
+
+let rawProfiles = [];
+let mergedProfiles = [];
+
+function mergeProfilesByHandle(profiles) {
+  const map = new Map();
+  for (const p of profiles) {
+    const key = (p.handle || "").toLowerCase();
+    if (!key) continue;
+
+    const platformEntry = {
+      platform: p.platform,
+      url: p.url,
+      followers: p.followers,
+      posts: p.posts,
+    };
+
+    const existing = map.get(key);
+    if (!existing) {
+      map.set(key, {
+        handle: p.handle,
+        name: p.name,
+        bio: p.bio || "",
+        collabAngleShort: p.collabAngleShort || "",
+        website: p.website || "",
+        platforms: [platformEntry],
+        tags: [...(p.tags || [])],
+        sourceNotes: [...(p.sourceNotes || [])],
+        bestScore: Number(p.score) || 0,
+        totalMatched: Number(p.matchedKeywords) || 0,
+      });
+      continue;
+    }
+
+    existing.platforms.push(platformEntry);
+    // Prefer longer bio / name
+    if ((p.bio || "").length > (existing.bio || "").length) existing.bio = p.bio;
+    if ((p.name || "").length > (existing.name || "").length) existing.name = p.name;
+    if (!existing.website && p.website) existing.website = p.website;
+    if (!existing.collabAngleShort && p.collabAngleShort) existing.collabAngleShort = p.collabAngleShort;
+    existing.tags = [...new Set([...existing.tags, ...(p.tags || [])])];
+    existing.sourceNotes = [...new Set([...existing.sourceNotes, ...(p.sourceNotes || [])])];
+    existing.bestScore = Math.max(existing.bestScore, Number(p.score) || 0);
+    existing.totalMatched += Number(p.matchedKeywords) || 0;
+  }
+
+  // Sort platforms so IG always renders first
+  for (const profile of map.values()) {
+    profile.platforms.sort((a, b) => {
+      if (a.platform === b.platform) return 0;
+      return a.platform === "instagram" ? -1 : 1;
+    });
+  }
+
+  // Sort merged profiles by matchedKeywords then score
+  return [...map.values()].sort((a, b) => {
+    if (b.totalMatched !== a.totalMatched) return b.totalMatched - a.totalMatched;
+    return b.bestScore - a.bestScore;
+  });
+}
+
+function hasCourseTag(profile) {
+  return (profile.tags || []).some((tag) => COURSE_TAGS.has(tag));
+}
 
 function loadChipSelection() {
   try {
@@ -126,20 +222,26 @@ function persist() {
   localStorage.setItem(stateKey, JSON.stringify(savedState));
 }
 
+function stateKeyFor(profile) {
+  return (profile.handle || "").toLowerCase();
+}
+
 function pipelineFor(profile) {
-  const key = `${profile.platform}:${profile.handle}`;
-  return savedState[key]?.pipeline || "new";
+  return savedState[stateKeyFor(profile)]?.pipeline || "new";
 }
 
 function profilesMatchingFilter() {
-  if (activeStatusFilter === "all") return currentProfiles;
-  return currentProfiles.filter((profile) => pipelineFor(profile) === activeStatusFilter);
+  return mergedProfiles.filter((profile) => {
+    if (activeStatusFilter !== "all" && pipelineFor(profile) !== activeStatusFilter) return false;
+    if (courseOnly && !hasCourseTag(profile)) return false;
+    return true;
+  });
 }
 
 function renderStatusFilter() {
   if (!elements.statusFilter) return;
-  const counts = { all: currentProfiles.length, priority: 0, watchlist: 0, contacted: 0, new: 0 };
-  for (const profile of currentProfiles) {
+  const counts = { all: mergedProfiles.length, priority: 0, watchlist: 0, contacted: 0, new: 0 };
+  for (const profile of mergedProfiles) {
     const status = pipelineFor(profile);
     if (counts[status] != null) counts[status] += 1;
   }
@@ -149,25 +251,31 @@ function renderStatusFilter() {
   elements.statusFilter.querySelectorAll(".status-chip").forEach((btn) => {
     btn.classList.toggle("active", btn.dataset.status === activeStatusFilter);
   });
+
+  // Update course-toggle count + state
+  if (elements.courseToggle) {
+    const courseCount = mergedProfiles.filter(hasCourseTag).length;
+    const courseLabel = elements.courseToggle.querySelector("[data-count='course']");
+    if (courseLabel) courseLabel.textContent = String(courseCount);
+    elements.courseToggle.classList.toggle("active", courseOnly);
+  }
 }
 
 function renderMetrics() {
-  const inRange = currentProfiles.filter(
-    (profile) =>
-      !profile.followers ||
-      (profile.followers >= Number(elements.minFollowers.value) &&
-        profile.followers <= Number(elements.maxFollowers.value)),
+  const minFollowers = Number(elements.minFollowers.value);
+  const maxFollowers = Number(elements.maxFollowers.value);
+  const inRange = mergedProfiles.filter((profile) =>
+    profile.platforms.some((p) => {
+      if (p.followers == null) return true;
+      return p.followers >= minFollowers && p.followers <= maxFollowers;
+    }),
   ).length;
-  const course = currentProfiles.filter((profile) =>
-    profile.tags.some((tag) =>
-      ["線上課程", "顧問服務", "講座課程", "求職課程"].includes(tag),
-    ),
-  ).length;
-  const priority = Object.values(savedState).filter(
-    (item) => item.pipeline === "priority",
+  const course = mergedProfiles.filter(hasCourseTag).length;
+  const priority = mergedProfiles.filter(
+    (profile) => pipelineFor(profile) === "priority",
   ).length;
 
-  elements.metricTotal.textContent = String(currentProfiles.length);
+  elements.metricTotal.textContent = String(mergedProfiles.length);
   elements.metricRange.textContent = String(inRange);
   elements.metricCourse.textContent = String(course);
   elements.metricPriority.textContent = String(priority);
@@ -205,39 +313,64 @@ function renderCards() {
   const visible = profilesMatchingFilter();
 
   if (!visible.length) {
-    if (activeStatusFilter === "all") {
-      elements.cardGrid.innerHTML = `<p class="empty-state">目前沒有符合搜尋條件的候選人，試試放寬粉絲區間或多勾幾個主題 chip。</p>`;
-    } else {
+    let msg = "目前沒有符合搜尋條件的候選人，試試放寬粉絲區間或多勾幾個主題 chip。";
+    if (activeStatusFilter !== "all" && !courseOnly) {
       const label = { priority: "優先接洽", watchlist: "持續追蹤", contacted: "已接洽", new: "待評估" }[activeStatusFilter] || activeStatusFilter;
-      elements.cardGrid.innerHTML = `<p class="empty-state">沒有候選人被標記為「${label}」。在卡片上的「內部狀態」下拉選單裡標記後，就會出現在這裡。</p>`;
+      msg = `沒有候選人被標記為「${label}」。在卡片上的「內部狀態」下拉選單裡標記後，就會出現在這裡。`;
+    } else if (courseOnly && activeStatusFilter === "all") {
+      msg = "目前的候選人都沒有課程合作的標籤，試著放寬主題 chip 或粉絲區間。";
+    } else if (courseOnly && activeStatusFilter !== "all") {
+      msg = "在目前的「狀態」篩選和「可談課程合作」交集下沒有候選人。試著切換其中一個。";
     }
+    elements.cardGrid.innerHTML = `<p class="empty-state">${msg}</p>`;
     return;
   }
 
   elements.cardGrid.innerHTML = visible
     .map((profile) => {
-      const key = `${profile.platform}:${profile.handle}`;
+      const key = stateKeyFor(profile);
       const stored = savedState[key] || {};
+      const badges = profile.platforms
+        .map(
+          (p) =>
+            `<span class="platform-badge platform-${p.platform}">${p.platform === "instagram" ? "IG" : "Threads"}</span>`,
+        )
+        .join("");
+      const followerBits = profile.platforms
+        .map((p) => {
+          const label = p.platform === "instagram" ? "IG" : "Threads";
+          return `${label} ${formatFollowers(p.followers)}`;
+        })
+        .join(" · ");
+      const postsBits = profile.platforms
+        .map((p) => p.posts || "—")
+        .join(" / ");
+      const platformLinks = profile.platforms
+        .map(
+          (p) =>
+            `<a href="${p.url}" target="_blank" rel="noreferrer">${p.platform === "instagram" ? "Instagram" : "Threads"}</a>`,
+        )
+        .join("");
       return `
       <article class="card">
         <div class="card-top">
           <div>
-            <span class="platform-badge">${profile.platform === "instagram" ? "IG" : "Threads"}</span>
+            <div class="platform-row">${badges}</div>
             <h3>${profile.name}</h3>
             <p class="handle">@${profile.handle}</p>
           </div>
-          <div class="score-pill">${profile.score} 分</div>
+          <div class="score-pill">${profile.bestScore} 分</div>
         </div>
         <div class="stat-row">
-          <div class="stat"><span>粉絲</span><strong>${formatFollowers(profile.followers)}</strong></div>
-          <div class="stat"><span>貼文 / 串文</span><strong>${profile.posts || "待確認"}</strong></div>
-          <div class="stat"><span>合作切角</span><strong>${profile.collabAngleShort}</strong></div>
+          <div class="stat"><span>粉絲</span><strong>${followerBits || "待確認"}</strong></div>
+          <div class="stat"><span>貼文 / 串文</span><strong>${postsBits}</strong></div>
+          <div class="stat"><span>合作切角</span><strong>${profile.collabAngleShort || "—"}</strong></div>
         </div>
         <p class="bio">${profile.bio}</p>
         <div class="tag-wrap">${(profile.tags || []).map((tag) => `<span class="tag">${tag}</span>`).join("")}</div>
         <div class="source-wrap">${(profile.sourceNotes || []).map((item) => `<span class="source-pill">${item}</span>`).join("")}</div>
         <div class="link-row">
-          <a href="${profile.url}" target="_blank" rel="noreferrer">開啟檔案</a>
+          ${platformLinks}
           ${profile.website ? `<a href="${profile.website}" target="_blank" rel="noreferrer">個站 / Link in bio</a>` : ""}
         </div>
         <div class="mini-grid">
@@ -267,7 +400,7 @@ function renderCards() {
       persist();
       renderMetrics();
       renderStatusFilter();
-      if (activeStatusFilter !== "all") {
+      if (activeStatusFilter !== "all" || courseOnly) {
         renderCards();
       }
     });
@@ -303,13 +436,15 @@ async function loadProfiles() {
       throw new Error(data.error || "搜尋服務暫時無法使用");
     }
 
-    currentProfiles = data.profiles || [];
+    rawProfiles = data.profiles || [];
+    mergedProfiles = mergeProfilesByHandle(rawProfiles);
     renderMetrics();
     renderStatusFilter();
     renderCards();
     renderStatus(data.crawlSummary);
   } catch (error) {
-    currentProfiles = [];
+    rawProfiles = [];
+    mergedProfiles = [];
     renderMetrics();
     renderStatusFilter();
     renderCards();
@@ -354,6 +489,15 @@ if (elements.statusFilter) {
       renderStatusFilter();
       renderCards();
     });
+  });
+}
+
+if (elements.courseToggle) {
+  elements.courseToggle.addEventListener("click", () => {
+    courseOnly = !courseOnly;
+    localStorage.setItem(courseOnlyPrefKey, courseOnly ? "1" : "0");
+    renderStatusFilter();
+    renderCards();
   });
 }
 

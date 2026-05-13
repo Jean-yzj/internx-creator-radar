@@ -100,8 +100,9 @@ textarea, input, select {
 .warning-text { color:#8e5410; }
 .status-filter {
   display:flex; flex-wrap:wrap; gap:10px;
-  margin: 0 0 18px;
+  margin: 0 0 10px;
 }
+.tag-filter { margin-bottom: 18px; }
 .status-chip {
   display:inline-flex; align-items:center; gap:8px;
   border:1px solid rgba(49,64,98,0.18);
@@ -138,7 +139,10 @@ textarea, input, select {
 .card { padding:24px; }
 .card-top, .stat-row, .link-row { display:flex; justify-content:space-between; gap:14px; }
 .platform-badge, .score-pill, .tag, .source-pill { display:inline-flex; align-items:center; border-radius:999px; }
-.platform-badge { padding:7px 10px; background:rgba(244,125,66,0.14); color:#a94e22; font-size:.74rem; font-weight:700; }
+.platform-row { display:flex; gap:6px; margin-bottom:8px; flex-wrap:wrap; }
+.platform-badge { padding:5px 10px; font-size:.72rem; font-weight:700; letter-spacing:.02em; }
+.platform-badge.platform-instagram { background:rgba(244,125,66,0.14); color:#a94e22; }
+.platform-badge.platform-threads { background:rgba(16,22,47,0.1); color:#10162f; }
 .score-pill { padding:10px 12px; background:#10162f; color:#fff8ea; font-weight:700; }
 .handle { margin:6px 0 0; color:#6c7791; }
 .stat-row { margin-top:16px; }
