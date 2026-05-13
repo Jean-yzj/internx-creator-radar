@@ -1,31 +1,5 @@
 const stateKey = "internx-creator-radar-state";
 const chipPrefKey = "internx-creator-radar-chips";
-const statusFilterPrefKey = "internx-creator-radar-status-filter";
-const courseOnlyPrefKey = "internx-creator-radar-course-only";
-const stateMigrationFlagKey = "internx-creator-radar-state-migrated-v2";
-
-const pageMeta = {
-  overview: {
-    eyebrow: "總覽",
-    title: "手機版 Creator Radar",
-    hint: "快速掌握合作名單狀態",
-  },
-  discover: {
-    eyebrow: "探索搜尋",
-    title: "公開資料探索",
-    hint: "重跑爬取並整理新候選人",
-  },
-  workspace: {
-    eyebrow: "合作工作台",
-    title: "逐一評估候選創作者",
-    hint: "保留單手可操作的卡片工作流",
-  },
-  crawler: {
-    eyebrow: "爬取狀態",
-    title: "同步品質與資料來源",
-    hint: "確認本次搜尋是否抓到新名單",
-  },
-};
 
 const TOPIC_CHIPS = [
   { id: "interview", label: "面試 / 履歷", keywords: ["面試", "履歷"], defaultOn: true },
@@ -60,34 +34,12 @@ const TOPIC_CHIPS = [
   { id: "workplace", label: "職場觀察", keywords: ["職場", "上班族"] },
 ];
 
-const COURSE_TAGS = new Set([
-  "線上課程",
-  "顧問服務",
-  "講座課程",
-  "求職課程",
-  "課程顧問",
-  "企業內訓",
-]);
-const PIPELINE_ORDER = { contacted: 4, priority: 3, watchlist: 2, new: 1 };
-
 const elements = {
-  pageEyebrow: document.getElementById("pageEyebrow"),
-  pageTitle: document.getElementById("pageTitle"),
-  pageHint: document.getElementById("pageHint"),
-  menuToggle: document.getElementById("menuToggle"),
-  sidebar: document.getElementById("sidebar"),
-  sidebarOverlay: document.getElementById("sidebarOverlay"),
-  navItems: [...document.querySelectorAll(".nav-item")],
-  jumpButtons: [...document.querySelectorAll("[data-jump-view]")],
-  viewPanels: [...document.querySelectorAll(".view-panel")],
   keywords: document.getElementById("keywords"),
   minFollowers: document.getElementById("minFollowers"),
   maxFollowers: document.getElementById("maxFollowers"),
   runSearch: document.getElementById("runSearch"),
   cardGrid: document.getElementById("cardGrid"),
-  topCandidates: document.getElementById("topCandidates"),
-  crawlMetrics: document.getElementById("crawlMetrics"),
-  crawlDetails: document.getElementById("crawlDetails"),
   metricTotal: document.getElementById("metric-total"),
   metricRange: document.getElementById("metric-range"),
   metricCourse: document.getElementById("metric-course"),
@@ -104,15 +56,19 @@ const elements = {
   courseToggle: document.getElementById("courseToggle"),
 };
 
+const statusFilterPrefKey = "internx-creator-radar-status-filter";
+const courseOnlyPrefKey = "internx-creator-radar-course-only";
+const stateMigrationFlagKey = "internx-creator-radar-state-migrated-v2";
+
+const COURSE_TAGS = new Set(["線上課程", "顧問服務", "講座課程", "求職課程", "課程顧問", "企業內訓"]);
+const PIPELINE_ORDER = { contacted: 4, priority: 3, watchlist: 2, new: 1 };
+
 let activeStatusFilter = localStorage.getItem(statusFilterPrefKey) || "all";
 let courseOnly = localStorage.getItem(courseOnlyPrefKey) === "1";
 let savedState = JSON.parse(localStorage.getItem(stateKey) || "{}");
-let activeView = window.location.hash.replace("#", "") || "overview";
-let activeChipIds = loadChipSelection();
-let rawProfiles = [];
-let mergedProfiles = [];
-let crawlSummary = null;
 
+// One-time migration: collapse "{platform}:{handle}" keys into "{handle}" so a creator's
+// state survives the IG+Threads card merge.
 if (!localStorage.getItem(stateMigrationFlagKey)) {
   const migrated = {};
   for (const [key, value] of Object.entries(savedState)) {
@@ -121,12 +77,10 @@ if (!localStorage.getItem(stateMigrationFlagKey)) {
       migrated[handle] = { ...value };
       continue;
     }
-
     const existing = migrated[handle];
     const newPipelineRank = PIPELINE_ORDER[value.pipeline] || 0;
     const existingPipelineRank = PIPELINE_ORDER[existing.pipeline] || 0;
     if (newPipelineRank > existingPipelineRank) existing.pipeline = value.pipeline;
-
     const memos = [existing.memo, value.memo].filter(Boolean);
     if (memos.length === 2 && memos[0] !== memos[1]) {
       existing.memo = memos.join("\n---\n");
@@ -134,10 +88,73 @@ if (!localStorage.getItem(stateMigrationFlagKey)) {
       existing.memo = memos[0];
     }
   }
-
   savedState = migrated;
   localStorage.setItem(stateKey, JSON.stringify(savedState));
   localStorage.setItem(stateMigrationFlagKey, "1");
+}
+
+let rawProfiles = [];
+let mergedProfiles = [];
+
+function mergeProfilesByHandle(profiles) {
+  const map = new Map();
+  for (const p of profiles) {
+    const key = (p.handle || "").toLowerCase();
+    if (!key) continue;
+
+    const platformEntry = {
+      platform: p.platform,
+      url: p.url,
+      followers: p.followers,
+      posts: p.posts,
+    };
+
+    const existing = map.get(key);
+    if (!existing) {
+      map.set(key, {
+        handle: p.handle,
+        name: p.name,
+        bio: p.bio || "",
+        collabAngleShort: p.collabAngleShort || "",
+        website: p.website || "",
+        platforms: [platformEntry],
+        tags: [...(p.tags || [])],
+        sourceNotes: [...(p.sourceNotes || [])],
+        bestScore: Number(p.score) || 0,
+        totalMatched: Number(p.matchedKeywords) || 0,
+      });
+      continue;
+    }
+
+    existing.platforms.push(platformEntry);
+    // Prefer longer bio / name
+    if ((p.bio || "").length > (existing.bio || "").length) existing.bio = p.bio;
+    if ((p.name || "").length > (existing.name || "").length) existing.name = p.name;
+    if (!existing.website && p.website) existing.website = p.website;
+    if (!existing.collabAngleShort && p.collabAngleShort) existing.collabAngleShort = p.collabAngleShort;
+    existing.tags = [...new Set([...existing.tags, ...(p.tags || [])])];
+    existing.sourceNotes = [...new Set([...existing.sourceNotes, ...(p.sourceNotes || [])])];
+    existing.bestScore = Math.max(existing.bestScore, Number(p.score) || 0);
+    existing.totalMatched += Number(p.matchedKeywords) || 0;
+  }
+
+  // Sort platforms so IG always renders first
+  for (const profile of map.values()) {
+    profile.platforms.sort((a, b) => {
+      if (a.platform === b.platform) return 0;
+      return a.platform === "instagram" ? -1 : 1;
+    });
+  }
+
+  // Sort merged profiles by matchedKeywords then score
+  return [...map.values()].sort((a, b) => {
+    if (b.totalMatched !== a.totalMatched) return b.totalMatched - a.totalMatched;
+    return b.bestScore - a.bestScore;
+  });
+}
+
+function hasCourseTag(profile) {
+  return (profile.tags || []).some((tag) => COURSE_TAGS.has(tag));
 }
 
 function loadChipSelection() {
@@ -147,120 +164,34 @@ function loadChipSelection() {
   } catch (error) {
     // fall through to defaults
   }
-
   return new Set(TOPIC_CHIPS.filter((chip) => chip.defaultOn).map((chip) => chip.id));
 }
 
-function persist() {
-  localStorage.setItem(stateKey, JSON.stringify(savedState));
-}
+let activeChipIds = loadChipSelection();
 
 function persistChips() {
   localStorage.setItem(chipPrefKey, JSON.stringify([...activeChipIds]));
 }
 
-function formatFollowers(value) {
-  if (value == null || value === "") return "待確認";
-  if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
-  if (value >= 1000) return `${(value / 1000).toFixed(1)}K`;
-  return `${value}`;
-}
+function renderChips() {
+  elements.chipGrid.innerHTML = TOPIC_CHIPS.map((chip) => {
+    const active = activeChipIds.has(chip.id) ? "active" : "";
+    return `<button type="button" class="chip ${active}" data-chip-id="${chip.id}">${chip.label}</button>`;
+  }).join("");
 
-function getPlatforms() {
-  return elements.toggles
-    .filter((button) => button.classList.contains("active"))
-    .map((button) => button.dataset.platform);
-}
-
-function getStoredPipelineCount(target) {
-  return Object.values(savedState).filter((item) => item.pipeline === target).length;
-}
-
-function setSidebarOpen(isOpen) {
-  document.body.classList.toggle("sidebar-open", isOpen);
-}
-
-function setActiveView(view) {
-  const nextView = pageMeta[view] ? view : "overview";
-  activeView = nextView;
-  window.location.hash = nextView;
-
-  elements.navItems.forEach((button) => {
-    button.classList.toggle("active", button.dataset.viewTarget === nextView);
-  });
-
-  elements.viewPanels.forEach((panel) => {
-    panel.classList.toggle("active", panel.dataset.view === nextView);
-  });
-
-  const meta = pageMeta[nextView];
-  elements.pageEyebrow.textContent = meta.eyebrow;
-  elements.pageTitle.textContent = meta.title;
-  elements.pageHint.textContent = meta.hint;
-
-  setSidebarOpen(false);
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}
-
-function mergeProfilesByHandle(profiles) {
-  const map = new Map();
-
-  for (const profile of profiles) {
-    const key = (profile.handle || "").toLowerCase();
-    if (!key) continue;
-
-    const platformEntry = {
-      platform: profile.platform,
-      url: profile.url,
-      followers: profile.followers,
-      posts: profile.posts,
-    };
-
-    const existing = map.get(key);
-    if (!existing) {
-      map.set(key, {
-        handle: profile.handle,
-        name: profile.name,
-        bio: profile.bio || "",
-        collabAngleShort: profile.collabAngleShort || "",
-        website: profile.website || "",
-        platforms: [platformEntry],
-        tags: [...(profile.tags || [])],
-        sourceNotes: [...(profile.sourceNotes || [])],
-        bestScore: Number(profile.score) || 0,
-        totalMatched: Number(profile.matchedKeywords) || 0,
-      });
-      continue;
-    }
-
-    existing.platforms.push(platformEntry);
-    if ((profile.bio || "").length > (existing.bio || "").length) existing.bio = profile.bio;
-    if ((profile.name || "").length > (existing.name || "").length) existing.name = profile.name;
-    if (!existing.website && profile.website) existing.website = profile.website;
-    if (!existing.collabAngleShort && profile.collabAngleShort) {
-      existing.collabAngleShort = profile.collabAngleShort;
-    }
-    existing.tags = [...new Set([...existing.tags, ...(profile.tags || [])])];
-    existing.sourceNotes = [...new Set([...existing.sourceNotes, ...(profile.sourceNotes || [])])];
-    existing.bestScore = Math.max(existing.bestScore, Number(profile.score) || 0);
-    existing.totalMatched += Number(profile.matchedKeywords) || 0;
-  }
-
-  for (const profile of map.values()) {
-    profile.platforms.sort((a, b) => {
-      if (a.platform === b.platform) return 0;
-      return a.platform === "instagram" ? -1 : 1;
+  elements.chipGrid.querySelectorAll(".chip").forEach((button) => {
+    button.addEventListener("click", () => {
+      const id = button.dataset.chipId;
+      if (activeChipIds.has(id)) {
+        activeChipIds.delete(id);
+        button.classList.remove("active");
+      } else {
+        activeChipIds.add(id);
+        button.classList.add("active");
+      }
+      persistChips();
     });
-  }
-
-  return [...map.values()].sort((a, b) => {
-    if (b.totalMatched !== a.totalMatched) return b.totalMatched - a.totalMatched;
-    return b.bestScore - a.bestScore;
   });
-}
-
-function hasCourseTag(profile) {
-  return (profile.tags || []).some((tag) => COURSE_TAGS.has(tag));
 }
 
 function collectKeywords() {
@@ -274,25 +205,21 @@ function collectKeywords() {
   return [...new Set([...fromChips, ...fromText])];
 }
 
-function renderChips() {
-  elements.chipGrid.innerHTML = TOPIC_CHIPS.map((chip) => {
-    const active = activeChipIds.has(chip.id) ? "active" : "";
-    return `<button type="button" class="chip ${active}" data-chip-id="${chip.id}">${chip.label}</button>`;
-  }).join("");
+function formatFollowers(value) {
+  if (!value) return "待確認";
+  if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
+  if (value >= 1000) return `${(value / 1000).toFixed(1)}K`;
+  return `${value}`;
+}
 
-  elements.chipGrid.querySelectorAll(".chip").forEach((button) => {
-    button.addEventListener("click", () => {
-      const { chipId } = button.dataset;
-      if (activeChipIds.has(chipId)) {
-        activeChipIds.delete(chipId);
-        button.classList.remove("active");
-      } else {
-        activeChipIds.add(chipId);
-        button.classList.add("active");
-      }
-      persistChips();
-    });
-  });
+function getPlatforms() {
+  return elements.toggles
+    .filter((button) => button.classList.contains("active"))
+    .map((button) => button.dataset.platform);
+}
+
+function persist() {
+  localStorage.setItem(stateKey, JSON.stringify(savedState));
 }
 
 function stateKeyFor(profile) {
@@ -313,21 +240,19 @@ function profilesMatchingFilter() {
 
 function renderStatusFilter() {
   if (!elements.statusFilter) return;
-
   const counts = { all: mergedProfiles.length, priority: 0, watchlist: 0, contacted: 0, new: 0 };
   for (const profile of mergedProfiles) {
     const status = pipelineFor(profile);
     if (counts[status] != null) counts[status] += 1;
   }
-
-  elements.statusFilter.querySelectorAll("[data-count]").forEach((element) => {
-    element.textContent = String(counts[element.dataset.count] || 0);
+  elements.statusFilter.querySelectorAll("[data-count]").forEach((el) => {
+    el.textContent = String(counts[el.dataset.count] || 0);
+  });
+  elements.statusFilter.querySelectorAll(".status-chip").forEach((btn) => {
+    btn.classList.toggle("active", btn.dataset.status === activeStatusFilter);
   });
 
-  elements.statusFilter.querySelectorAll(".status-chip").forEach((button) => {
-    button.classList.toggle("active", button.dataset.status === activeStatusFilter);
-  });
-
+  // Update course-toggle count + state
   if (elements.courseToggle) {
     const courseCount = mergedProfiles.filter(hasCourseTag).length;
     const courseLabel = elements.courseToggle.querySelector("[data-count='course']");
@@ -339,19 +264,21 @@ function renderStatusFilter() {
 function renderMetrics() {
   const minFollowers = Number(elements.minFollowers.value);
   const maxFollowers = Number(elements.maxFollowers.value);
-
   const inRange = mergedProfiles.filter((profile) =>
-    profile.platforms.some((platform) => {
-      if (platform.followers == null) return true;
-      return platform.followers >= minFollowers && platform.followers <= maxFollowers;
+    profile.platforms.some((p) => {
+      if (p.followers == null) return true;
+      return p.followers >= minFollowers && p.followers <= maxFollowers;
     }),
   ).length;
   const course = mergedProfiles.filter(hasCourseTag).length;
+  const priority = mergedProfiles.filter(
+    (profile) => pipelineFor(profile) === "priority",
+  ).length;
 
   elements.metricTotal.textContent = String(mergedProfiles.length);
   elements.metricRange.textContent = String(inRange);
   elements.metricCourse.textContent = String(course);
-  elements.metricPriority.textContent = String(getStoredPipelineCount("priority"));
+  elements.metricPriority.textContent = String(priority);
 }
 
 function renderStatus(summary = null, error = "") {
@@ -371,7 +298,9 @@ function renderStatus(summary = null, error = "") {
     return;
   }
 
-  const refreshed = new Date(summary.refreshedAt).toLocaleString("zh-TW", { hour12: false });
+  const refreshed = new Date(summary.refreshedAt).toLocaleString("zh-TW", {
+    hour12: false,
+  });
   const cacheLabel = summary.fromCache ? "快取" : "即時";
   elements.crawlStatus.dataset.state = summary.fromCache ? "cached" : "live";
   elements.crawlStatus.querySelector(".status-pill").textContent = `${cacheLabel}爬取完成`;
@@ -380,129 +309,20 @@ function renderStatus(summary = null, error = "") {
   elements.crawlWarningText.textContent = summary.warningSummary || "";
 }
 
-function renderTopCandidates() {
-  const topProfiles = mergedProfiles.slice(0, 4);
-  elements.topCandidates.innerHTML = topProfiles.length
-    ? topProfiles
-        .map((profile) => {
-          const badges = profile.platforms
-            .map(
-              (platform) =>
-                `<span class="platform-badge platform-${platform.platform}">${platform.platform === "instagram" ? "IG" : "Threads"}</span>`,
-            )
-            .join("");
-          const followerBits = profile.platforms
-            .map((platform) => `${platform.platform === "instagram" ? "IG" : "Threads"} ${formatFollowers(platform.followers)}`)
-            .join(" · ");
-
-          return `
-            <article class="list-card">
-              <div>
-                <div class="list-head">
-                  <div class="platform-row">${badges}</div>
-                  <strong>${profile.name}</strong>
-                </div>
-                <p>@${profile.handle}</p>
-              </div>
-              <div class="list-meta">
-                <span>${followerBits || "粉絲待確認"}</span>
-                <span>${profile.bestScore} 分</span>
-              </div>
-            </article>
-          `;
-        })
-        .join("")
-    : `
-      <article class="empty-card">
-        <strong>尚未有候選名單</strong>
-        <p>先去「探索搜尋」跑一次公開爬取，就會在這裡看到優先名單。</p>
-      </article>
-    `;
-}
-
-function renderCrawlerPage() {
-  if (!crawlSummary) {
-    elements.crawlMetrics.innerHTML = `
-      <article class="metric-card">
-        <span>同步狀態</span>
-        <strong>尚未開始</strong>
-        <p>先去探索搜尋執行一次爬取。</p>
-      </article>
-    `;
-    elements.crawlDetails.innerHTML = `
-      <article class="empty-card">
-        <strong>還沒有同步紀錄</strong>
-        <p>完成第一次搜尋後，這裡會顯示查詢數、回收名單數與警告摘要。</p>
-      </article>
-    `;
-    return;
-  }
-
-  elements.crawlMetrics.innerHTML = [
-    { label: "查詢數", value: crawlSummary.queriesRun, hint: "本次跑出的搜尋組數" },
-    { label: "回收名單", value: crawlSummary.returnedProfiles, hint: "可進入工作台檢查的候選數" },
-    { label: "新帳號", value: crawlSummary.discoveredProfiles, hint: "不是種子名單的即時發現" },
-    { label: "提示數", value: crawlSummary.warningCount || 0, hint: "不影響主要名單的外部來源提醒" },
-  ]
-    .map(
-      (item) => `
-        <article class="metric-card compact-card">
-          <span>${item.label}</span>
-          <strong>${item.value}</strong>
-          <p>${item.hint}</p>
-        </article>
-      `,
-    )
-    .join("");
-
-  elements.crawlDetails.innerHTML = [
-    {
-      title: "同步摘要",
-      body: crawlSummary.warningSummary || "這次同步沒有額外提醒，公開資料流程順利完成。",
-    },
-    {
-      title: "資料來源",
-      body: crawlSummary.cseEnabled
-        ? "目前同時檢查種子名單、DuckDuckGo 公開搜尋與 Google CSE。"
-        : "目前以種子名單與 DuckDuckGo 公開搜尋為主，Google CSE 尚未啟用。",
-    },
-    {
-      title: "手機版體驗",
-      body: "搜尋頁只保留必要欄位與摘要狀態，避免手機螢幕上直接出現冗長錯誤網址。",
-    },
-  ]
-    .map(
-      (item) => `
-        <article class="list-card detail-card">
-          <strong>${item.title}</strong>
-          <p>${item.body}</p>
-        </article>
-      `,
-    )
-    .join("");
-}
-
 function renderCards() {
   const visible = profilesMatchingFilter();
 
   if (!visible.length) {
-    let message = "目前沒有符合搜尋條件的候選人，試試放寬粉絲區間或多勾幾個主題 chip。";
+    let msg = "目前沒有符合搜尋條件的候選人，試試放寬粉絲區間或多勾幾個主題 chip。";
     if (activeStatusFilter !== "all" && !courseOnly) {
-      const label =
-        {
-          priority: "優先接洽",
-          watchlist: "持續追蹤",
-          contacted: "已接洽",
-          new: "待評估",
-        }[activeStatusFilter] || activeStatusFilter;
-      message = `沒有候選人被標記為「${label}」。在卡片上的「內部狀態」下拉選單裡標記後，就會出現在這裡。`;
+      const label = { priority: "優先接洽", watchlist: "持續追蹤", contacted: "已接洽", new: "待評估" }[activeStatusFilter] || activeStatusFilter;
+      msg = `沒有候選人被標記為「${label}」。在卡片上的「內部狀態」下拉選單裡標記後，就會出現在這裡。`;
     } else if (courseOnly && activeStatusFilter === "all") {
-      message = "目前的候選人都沒有課程合作的標籤，試著放寬主題 chip 或粉絲區間。";
+      msg = "目前的候選人都沒有課程合作的標籤，試著放寬主題 chip 或粉絲區間。";
     } else if (courseOnly && activeStatusFilter !== "all") {
-      message = "在目前的「狀態」篩選和「可談課程合作」交集下沒有候選人。試著切換其中一個。";
+      msg = "在目前的「狀態」篩選和「可談課程合作」交集下沒有候選人。試著切換其中一個。";
     }
-
-    elements.cardGrid.innerHTML = `<p class="empty-state">${message}</p>`;
+    elements.cardGrid.innerHTML = `<p class="empty-state">${msg}</p>`;
     return;
   }
 
@@ -512,98 +332,90 @@ function renderCards() {
       const stored = savedState[key] || {};
       const badges = profile.platforms
         .map(
-          (platform) =>
-            `<span class="platform-badge platform-${platform.platform}">${platform.platform === "instagram" ? "IG" : "Threads"}</span>`,
+          (p) =>
+            `<span class="platform-badge platform-${p.platform}">${p.platform === "instagram" ? "IG" : "Threads"}</span>`,
         )
         .join("");
       const followerBits = profile.platforms
-        .map((platform) => `${platform.platform === "instagram" ? "IG" : "Threads"} ${formatFollowers(platform.followers)}`)
+        .map((p) => {
+          const label = p.platform === "instagram" ? "IG" : "Threads";
+          return `${label} ${formatFollowers(p.followers)}`;
+        })
         .join(" · ");
-      const postsBits = profile.platforms.map((platform) => platform.posts || "—").join(" / ");
+      const postsBits = profile.platforms
+        .map((p) => p.posts || "—")
+        .join(" / ");
       const platformLinks = profile.platforms
         .map(
-          (platform) =>
-            `<a href="${platform.url}" target="_blank" rel="noreferrer">${platform.platform === "instagram" ? "Instagram" : "Threads"}</a>`,
+          (p) =>
+            `<a href="${p.url}" target="_blank" rel="noreferrer">${p.platform === "instagram" ? "Instagram" : "Threads"}</a>`,
         )
         .join("");
       return `
-        <article class="card">
-          <div class="card-top">
-            <div>
-              <div class="platform-row">${badges}</div>
-              <h3>${profile.name}</h3>
-              <p class="handle">@${profile.handle}</p>
-            </div>
-            <div class="score-pill">${profile.bestScore} 分</div>
+      <article class="card">
+        <div class="card-top">
+          <div>
+            <div class="platform-row">${badges}</div>
+            <h3>${profile.name}</h3>
+            <p class="handle">@${profile.handle}</p>
           </div>
-          <div class="stat-row">
-            <div class="stat"><span>粉絲</span><strong>${followerBits || "待確認"}</strong></div>
-            <div class="stat"><span>貼文 / 串文</span><strong>${postsBits}</strong></div>
-            <div class="stat"><span>合作切角</span><strong>${profile.collabAngleShort || "—"}</strong></div>
+          <div class="score-pill">${profile.bestScore} 分</div>
+        </div>
+        <div class="stat-row">
+          <div class="stat"><span>粉絲</span><strong>${followerBits || "待確認"}</strong></div>
+          <div class="stat"><span>貼文 / 串文</span><strong>${postsBits}</strong></div>
+          <div class="stat"><span>合作切角</span><strong>${profile.collabAngleShort || "—"}</strong></div>
+        </div>
+        <p class="bio">${profile.bio}</p>
+        <div class="tag-wrap">${(profile.tags || []).map((tag) => `<span class="tag">${tag}</span>`).join("")}</div>
+        <div class="source-wrap">${(profile.sourceNotes || []).map((item) => `<span class="source-pill">${item}</span>`).join("")}</div>
+        <div class="link-row">
+          ${platformLinks}
+          ${profile.website ? `<a href="${profile.website}" target="_blank" rel="noreferrer">個站 / Link in bio</a>` : ""}
+        </div>
+        <div class="mini-grid">
+          <div class="mini-field">
+            <label>內部狀態</label>
+            <select data-key="${key}" class="pipeline-select">
+              <option value="new" ${stored.pipeline === "new" || !stored.pipeline ? "selected" : ""}>待評估</option>
+              <option value="priority" ${stored.pipeline === "priority" ? "selected" : ""}>優先接洽</option>
+              <option value="watchlist" ${stored.pipeline === "watchlist" ? "selected" : ""}>持續追蹤</option>
+              <option value="contacted" ${stored.pipeline === "contacted" ? "selected" : ""}>已接洽</option>
+            </select>
           </div>
-          <p class="bio">${profile.bio}</p>
-          <div class="tag-wrap">${(profile.tags || []).map((tag) => `<span class="tag">${tag}</span>`).join("")}</div>
-          <div class="source-wrap">${(profile.sourceNotes || []).map((item) => `<span class="source-pill">${item}</span>`).join("")}</div>
-          <div class="link-row">
-            ${platformLinks}
-            ${profile.website ? `<a href="${profile.website}" target="_blank" rel="noreferrer">個站 / Link in bio</a>` : ""}
+          <div class="mini-field">
+            <label>BD 備註</label>
+            <textarea data-key="${key}" class="memo-input" rows="3" placeholder="例如：適合做職涯問答、可談課程分潤、先從校園主題切入">${stored.memo || ""}</textarea>
           </div>
-          <div class="mini-grid">
-            <div class="mini-field">
-              <label>內部狀態</label>
-              <select data-key="${key}" class="pipeline-select">
-                <option value="new" ${stored.pipeline === "new" || !stored.pipeline ? "selected" : ""}>待評估</option>
-                <option value="priority" ${stored.pipeline === "priority" ? "selected" : ""}>優先接洽</option>
-                <option value="watchlist" ${stored.pipeline === "watchlist" ? "selected" : ""}>持續追蹤</option>
-                <option value="contacted" ${stored.pipeline === "contacted" ? "selected" : ""}>已接洽</option>
-              </select>
-            </div>
-            <div class="mini-field">
-              <label>BD 備註</label>
-              <textarea
-                data-key="${key}"
-                class="memo-input"
-                rows="3"
-                placeholder="例如：適合做職涯問答、可談課程分潤、先從校園主題切入"
-              >${stored.memo || ""}</textarea>
-            </div>
-          </div>
-        </article>
-      `;
+        </div>
+      </article>
+    `;
     })
     .join("");
 
   document.querySelectorAll(".pipeline-select").forEach((select) => {
     select.addEventListener("change", (event) => {
-      const { key } = event.target.dataset;
+      const key = event.target.dataset.key;
       savedState[key] = { ...(savedState[key] || {}), pipeline: event.target.value };
       persist();
       renderMetrics();
       renderStatusFilter();
-      if (activeStatusFilter !== "all" || courseOnly) renderCards();
+      if (activeStatusFilter !== "all" || courseOnly) {
+        renderCards();
+      }
     });
   });
 
   document.querySelectorAll(".memo-input").forEach((input) => {
     input.addEventListener("input", (event) => {
-      const { key } = event.target.dataset;
+      const key = event.target.dataset.key;
       savedState[key] = { ...(savedState[key] || {}), memo: event.target.value };
       persist();
     });
   });
 }
 
-function renderEverything() {
-  renderMetrics();
-  renderStatusFilter();
-  renderTopCandidates();
-  renderCards();
-  renderCrawlerPage();
-  renderStatus(crawlSummary);
-}
-
-async function loadProfiles(options = {}) {
-  const { jumpToWorkspace = false } = options;
+async function loadProfiles() {
   const keywords = collectKeywords();
   const params = new URLSearchParams({
     keywords: keywords.join(","),
@@ -626,40 +438,22 @@ async function loadProfiles(options = {}) {
 
     rawProfiles = data.profiles || [];
     mergedProfiles = mergeProfilesByHandle(rawProfiles);
-    crawlSummary = data.crawlSummary || null;
-    renderEverything();
-    if (jumpToWorkspace) setActiveView("workspace");
+    renderMetrics();
+    renderStatusFilter();
+    renderCards();
+    renderStatus(data.crawlSummary);
   } catch (error) {
     rawProfiles = [];
     mergedProfiles = [];
-    crawlSummary = null;
-    renderEverything();
+    renderMetrics();
+    renderStatusFilter();
+    renderCards();
     renderStatus(null, error.message || "搜尋時發生未知問題");
   } finally {
     elements.runSearch.disabled = false;
     elements.runSearch.textContent = "重新搜尋候選創作者";
   }
 }
-
-elements.menuToggle.addEventListener("click", () => {
-  setSidebarOpen(!document.body.classList.contains("sidebar-open"));
-});
-
-elements.sidebarOverlay.addEventListener("click", () => {
-  setSidebarOpen(false);
-});
-
-elements.navItems.forEach((button) => {
-  button.addEventListener("click", () => {
-    setActiveView(button.dataset.viewTarget);
-  });
-});
-
-elements.jumpButtons.forEach((button) => {
-  button.addEventListener("click", () => {
-    setActiveView(button.dataset.jumpView);
-  });
-});
 
 elements.toggles.forEach((button) => {
   button.addEventListener("click", () => {
@@ -685,14 +479,12 @@ elements.chipsReset.addEventListener("click", () => {
   renderChips();
 });
 
-elements.runSearch.addEventListener("click", () => {
-  loadProfiles({ jumpToWorkspace: true });
-});
+elements.runSearch.addEventListener("click", loadProfiles);
 
 if (elements.statusFilter) {
-  elements.statusFilter.querySelectorAll(".status-chip").forEach((button) => {
-    button.addEventListener("click", () => {
-      activeStatusFilter = button.dataset.status;
+  elements.statusFilter.querySelectorAll(".status-chip").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      activeStatusFilter = btn.dataset.status;
       localStorage.setItem(statusFilterPrefKey, activeStatusFilter);
       renderStatusFilter();
       renderCards();
@@ -709,10 +501,5 @@ if (elements.courseToggle) {
   });
 }
 
-window.addEventListener("hashchange", () => {
-  setActiveView(window.location.hash.replace("#", "") || "overview");
-});
-
 renderChips();
-setActiveView(activeView);
 loadProfiles();

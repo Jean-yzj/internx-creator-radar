@@ -7,241 +7,86 @@
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
-    <div class="app-shell">
-      <div id="sidebarOverlay" class="sidebar-overlay"></div>
-
-      <aside id="sidebar" class="sidebar">
-        <div class="sidebar-head">
+    <main class="shell">
+      <section class="hero">
+        <div class="hero-card">
           <span class="eyebrow">InternX Internal Tool</span>
-          <h1>Creator Radar</h1>
-          <p>給 BD 團隊的手機版創作者工作台，從搜尋、評估到追蹤都能在同一個操作流完成。</p>
+          <h1>Creator Radar for BD</h1>
+          <p>幫實習通整理適合合作的職涯創作者與平台帳號，優先鎖定有課程、面試求職內容，以及在 IG 或 Threads 具一定聲量的人選。</p>
         </div>
+        <div class="metric-grid">
+          <div class="metric-card"><span>候選名單</span><strong id="metric-total">0</strong><p>整合種子名單與搜尋排序</p></div>
+          <div class="metric-card"><span>區間內粉絲</span><strong id="metric-range">0</strong><p>符合 1K - 50K 或待人工複核</p></div>
+          <div class="metric-card"><span>可談課程合作</span><strong id="metric-course">0</strong><p>有課程、工作坊或顧問服務訊號</p></div>
+          <div class="metric-card"><span>優先接洽</span><strong id="metric-priority">0</strong><p>依本機儲存的 BD 狀態統計</p></div>
+        </div>
+      </section>
 
-        <nav class="nav-list" aria-label="功能導覽">
-          <button class="nav-item active" data-view-target="overview">
-            <strong>總覽</strong>
-            <span>先看名單健康度與合作優先級</span>
-          </button>
-          <button class="nav-item" data-view-target="discover">
-            <strong>探索搜尋</strong>
-            <span>重跑公開爬取與條件搜尋</span>
-          </button>
-          <button class="nav-item" data-view-target="workspace">
-            <strong>合作工作台</strong>
-            <span>逐一檢查候選人並留下備註</span>
-          </button>
-          <button class="nav-item" data-view-target="crawler">
-            <strong>爬取狀態</strong>
-            <span>查看同步進度與資料來源品質</span>
-          </button>
-        </nav>
-
-        <div class="sidebar-foot">
-          <div class="mini-note">
-            <span class="mini-label">Mobile-first</span>
-            <p>側邊欄可在手機上滑動切換功能頁，搜尋與工作台維持單欄閱讀節奏。</p>
+      <section class="panel">
+        <div class="field">
+          <div class="field-head">
+            <span>主題勾選</span>
+            <div class="chip-actions">
+              <button type="button" id="chipsAll" class="link-btn">全選</button>
+              <button type="button" id="chipsNone" class="link-btn">全清</button>
+              <button type="button" id="chipsReset" class="link-btn">回預設</button>
+            </div>
+          </div>
+          <div id="chipGrid" class="chip-grid"></div>
+        </div>
+        <div class="field">
+          <label for="keywords">其他關鍵字（自由輸入，逗號分隔）</label>
+          <textarea id="keywords" rows="2" placeholder="例如：北漂, 公職, 教師, 法律"></textarea>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="minFollowers">最低粉絲</label>
+            <input id="minFollowers" type="number" value="1000" />
+          </div>
+          <div class="field">
+            <label for="maxFollowers">最高粉絲</label>
+            <input id="maxFollowers" type="number" value="50000" />
+          </div>
+          <div class="field">
+            <span>平台</span>
+            <div class="toggle-row">
+              <button class="toggle active" data-platform="instagram">Instagram</button>
+              <button class="toggle active" data-platform="threads">Threads</button>
+            </div>
           </div>
         </div>
-      </aside>
+        <div class="action-row">
+          <button id="runSearch" class="primary-action">重新搜尋候選創作者</button>
+          <p>系統會真的去外部搜尋公開 IG / Threads 個人頁，再同步簡介、粉絲數、外部網站訊號與新候選名單。</p>
+        </div>
+        <div id="crawlStatus" class="crawl-status">
+          <div class="status-pill">等待首次爬取</div>
+          <p id="crawlSummaryText">尚未執行即時 crawl。</p>
+          <p id="crawlWarningText" class="warning-text"></p>
+        </div>
+      </section>
 
-      <div class="content-shell">
-        <header class="topbar">
-          <button id="menuToggle" class="menu-toggle" type="button" aria-label="開啟功能選單">
-            <span></span>
-            <span></span>
-            <span></span>
-          </button>
+      <section class="results-header">
+        <div>
+          <span class="eyebrow">Workspace</span>
+          <h2>合作名單工作台</h2>
+        </div>
+        <p>每張卡都能直接記錄內部狀態與備註，資料只存在你的瀏覽器。</p>
+      </section>
 
-          <div class="topbar-copy">
-            <span id="pageEyebrow" class="eyebrow">總覽</span>
-            <h2 id="pageTitle">手機版 Creator Radar</h2>
-          </div>
-
-          <div class="topbar-meta">
-            <div class="meta-chip">
-              <span>目前頁面</span>
-              <strong id="pageHint">快速掌握合作名單狀態</strong>
-            </div>
-          </div>
-        </header>
-
-        <main class="content-stack">
-          <section class="view-panel active" data-view="overview">
-            <section class="hero-card">
-              <span class="eyebrow">Overview</span>
-              <h3>把公開爬取結果整理成可以在手機上快速決策的 BD 面板。</h3>
-              <p>
-                你可以先在這裡看整體名單狀態，再切到探索搜尋重新抓資料，或直接進工作台逐一標記優先接洽對象。
-              </p>
-
-              <div class="hero-actions">
-                <button class="ghost-action" type="button" data-jump-view="discover">去跑新搜尋</button>
-                <button class="ghost-action" type="button" data-jump-view="workspace">查看候選名單</button>
-              </div>
-            </section>
-
-            <section class="metric-grid">
-              <article class="metric-card">
-                <span>候選名單</span>
-                <strong id="metric-total">0</strong>
-                <p>整合種子名單與即時爬取結果</p>
-              </article>
-              <article class="metric-card">
-                <span>區間內粉絲</span>
-                <strong id="metric-range">0</strong>
-                <p>符合 1K - 50K 或待人工複核</p>
-              </article>
-              <article class="metric-card">
-                <span>可談課程合作</span>
-                <strong id="metric-course">0</strong>
-                <p>有課程、工作坊或顧問訊號</p>
-              </article>
-              <article class="metric-card">
-                <span>優先接洽</span>
-                <strong id="metric-priority">0</strong>
-                <p>依你的本機標記即時統計</p>
-              </article>
-            </section>
-
-            <section class="panel">
-              <div class="section-head compact">
-                <div>
-                  <span class="eyebrow">Top Picks</span>
-                  <h3>優先檢查名單</h3>
-                </div>
-                <button class="text-action" type="button" data-jump-view="workspace">打開工作台</button>
-              </div>
-              <div id="topCandidates" class="stack-list"></div>
-            </section>
-          </section>
-
-          <section class="view-panel" data-view="discover">
-            <section class="panel">
-              <div class="section-head">
-                <div>
-                  <span class="eyebrow">Discover</span>
-                  <h3>探索搜尋</h3>
-                </div>
-                <p>用手機版流程重跑公開資料抓取，完成後可以直接切去工作台檢查結果。</p>
-              </div>
-
-              <div class="field">
-                <div class="field-head">
-                  <span>主題勾選</span>
-                  <div class="chip-actions">
-                    <button type="button" id="chipsAll" class="link-btn">全選</button>
-                    <button type="button" id="chipsNone" class="link-btn">全清</button>
-                    <button type="button" id="chipsReset" class="link-btn">回預設</button>
-                  </div>
-                </div>
-                <div id="chipGrid" class="chip-grid"></div>
-              </div>
-
-              <div class="field">
-                <label for="keywords">其他關鍵字（自由輸入，逗號分隔）</label>
-                <textarea
-                  id="keywords"
-                  rows="3"
-                  placeholder="例如：北漂, 公職, 教師, 法律"
-                ></textarea>
-              </div>
-
-              <div class="field-row">
-                <div class="field">
-                  <label for="minFollowers">最低粉絲</label>
-                  <input id="minFollowers" type="number" value="1000" />
-                </div>
-                <div class="field">
-                  <label for="maxFollowers">最高粉絲</label>
-                  <input id="maxFollowers" type="number" value="50000" />
-                </div>
-                <div class="field">
-                  <span>平台</span>
-                  <div class="toggle-row">
-                    <button class="toggle active" data-platform="instagram" type="button">Instagram</button>
-                    <button class="toggle active" data-platform="threads" type="button">Threads</button>
-                  </div>
-                </div>
-              </div>
-
-              <div class="action-row">
-                <button id="runSearch" class="primary-action" type="button">重新搜尋候選創作者</button>
-                <p>系統會同步公開 IG / Threads 頁面、個站與 link-in-bio，再整理成手機版可讀的候選清單。</p>
-              </div>
-            </section>
-
-            <section id="crawlStatus" class="crawl-status">
-              <div class="status-row">
-                <div class="status-pill">等待首次爬取</div>
-                <button class="text-action" type="button" data-jump-view="crawler">看詳細狀態</button>
-              </div>
-              <p id="crawlSummaryText">尚未執行即時 crawl。</p>
-              <p id="crawlWarningText" class="warning-text"></p>
-            </section>
-          </section>
-
-          <section class="view-panel" data-view="workspace">
-            <section class="results-header">
-              <div>
-                <span class="eyebrow">Workspace</span>
-                <h3>合作名單工作台</h3>
-              </div>
-              <p>卡片改成單欄優先，讓手機上也能順手讀 bio、改狀態、留備註。</p>
-            </section>
-
-            <div id="statusFilter" class="status-filter">
-              <button type="button" class="status-chip active" data-status="all">
-                全部 <span class="count" data-count="all">0</span>
-              </button>
-              <button type="button" class="status-chip" data-status="priority">
-                優先接洽 <span class="count" data-count="priority">0</span>
-              </button>
-              <button type="button" class="status-chip" data-status="watchlist">
-                持續追蹤 <span class="count" data-count="watchlist">0</span>
-              </button>
-              <button type="button" class="status-chip" data-status="contacted">
-                已接洽 <span class="count" data-count="contacted">0</span>
-              </button>
-              <button type="button" class="status-chip" data-status="new">
-                待評估 <span class="count" data-count="new">0</span>
-              </button>
-            </div>
-
-            <div id="tagFilter" class="status-filter tag-filter">
-              <button type="button" class="status-chip" id="courseToggle">
-                只看可談課程合作 <span class="count" data-count="course">0</span>
-              </button>
-            </div>
-
-            <section id="cardGrid" class="card-grid"></section>
-          </section>
-
-          <section class="view-panel" data-view="crawler">
-            <section class="panel">
-              <div class="section-head">
-                <div>
-                  <span class="eyebrow">Crawler</span>
-                  <h3>資料同步狀態</h3>
-                </div>
-                <p>把這次抓了哪些資料、用了幾組查詢、還有哪些來源待補強，一次看清楚。</p>
-              </div>
-
-              <div id="crawlMetrics" class="summary-grid"></div>
-            </section>
-
-            <section class="panel">
-              <div class="section-head compact">
-                <div>
-                  <span class="eyebrow">Signals</span>
-                  <h3>同步說明</h3>
-                </div>
-              </div>
-              <div id="crawlDetails" class="stack-list"></div>
-            </section>
-          </section>
-        </main>
+      <div id="statusFilter" class="status-filter">
+        <button type="button" class="status-chip active" data-status="all">全部 <span class="count" data-count="all">0</span></button>
+        <button type="button" class="status-chip" data-status="priority">優先接洽 <span class="count" data-count="priority">0</span></button>
+        <button type="button" class="status-chip" data-status="watchlist">持續追蹤 <span class="count" data-count="watchlist">0</span></button>
+        <button type="button" class="status-chip" data-status="contacted">已接洽 <span class="count" data-count="contacted">0</span></button>
+        <button type="button" class="status-chip" data-status="new">待評估 <span class="count" data-count="new">0</span></button>
       </div>
-    </div>
+      <div id="tagFilter" class="status-filter tag-filter">
+        <button type="button" class="status-chip" id="courseToggle">只看可談課程合作 <span class="count" data-count="course">0</span></button>
+      </div>
+
+      <section id="cardGrid" class="card-grid"></section>
+    </main>
     <script src="/app.js"></script>
   </body>
-</html>
+  </html>
