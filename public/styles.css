@@ -276,7 +276,15 @@ textarea, input, select {
   margin: 4px 0 12px; color: var(--muted); font-size:.85rem;
 }
 .card-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; }
-.card { padding:24px; }
+.card { padding:24px; min-width:0; overflow:hidden; }
+.card .bio,
+.card .source-pill,
+.card .link-row a,
+.card .dm-message {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.source-pill { max-width: 100%; }
 .card.compact { padding:18px; border-radius:22px; }
 .card.compact .stat-row { gap:8px; }
 .card.compact .stat { padding:10px; }
@@ -339,10 +347,18 @@ textarea, input, select {
 .mini-grid { display:grid; gap:14px; margin-top:18px; }
 @media (max-width: 980px) {
   .hero, .metric-grid, .field-row, .card-grid { grid-template-columns: 1fr; }
-  .action-row, .results-header, .card-top, .stat-row, .link-row { flex-direction:column; align-items:stretch; }
+  .action-row, .results-header, .stat-row { flex-direction:column; align-items:stretch; }
+  .card-top { align-items:flex-start; gap:10px; }
+  .card-top > div:first-child { flex:1; min-width:0; }
+  .score-pill { flex:0 0 auto; align-self:flex-start; }
+  .link-row { flex-direction:row; flex-wrap:wrap; gap:12px 16px; }
   .workspace-toolbar { flex-direction:column; align-items:stretch; }
   .toolbar-controls { justify-content:space-between; }
   .kanban { grid-template-columns:repeat(4, minmax(220px, 1fr)); }
+  .dm-controls { flex-wrap:wrap; }
+  .manual-add-form { flex-direction:column; align-items:stretch; }
+  .manual-add-form input[type="text"] { min-width:0; }
+  .manual-add-submit, .manual-add-form .link-btn { align-self:flex-start; }
 }
 
 @media (max-width: 640px) {
@@ -352,8 +368,11 @@ textarea, input, select {
     grid-template-columns:none;
     scroll-snap-type:x mandatory;
   }
-  .kanban-column { scroll-snap-align:start; }
+  .kanban-column { scroll-snap-align:start; min-width:0; }
   .toolbar-controls { flex-direction:column; align-items:stretch; }
   .export-row { width:100%; }
   .export-row .secondary-action { flex:1; }
+  .dm-controls { gap:8px; }
+  .dm-controls label { flex:1; }
+  .dm-copy { width:100%; }
 }
