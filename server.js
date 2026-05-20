@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { discoverCreators, normalizeInput } from "./lib/runtimeDiscovery.js";
+import { discoverCreators, enrichSingleProfile, normalizeInput } from "./lib/runtimeDiscovery.js";
 
 const PORT = Number(process.env.PORT || 3000);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -74,11 +74,39 @@ async function handleDiscover(req, res, requestUrl) {
   }
 }
 
+async function handleProfile(req, res, requestUrl) {
+  if (req.method !== "POST") {
+    sendJson(res, { error: "Method not allowed" }, 405);
+    return;
+  }
+  try {
+    const body = await parseRequestBody(req);
+    const url = body?.url || requestUrl.searchParams.get("url") || "";
+    if (!url) {
+      sendJson(res, { error: "需要 url 欄位（IG 或 Threads 個人頁）" }, 400);
+      return;
+    }
+    const result = await enrichSingleProfile(url, body || {});
+    sendJson(res, result);
+  } catch (error) {
+    sendJson(
+      res,
+      { error: error.message || "Profile enrichment failed" },
+      error.message === "Invalid JSON body" ? 400 : 500,
+    );
+  }
+}
+
 const server = http.createServer(async (req, res) => {
   const requestUrl = new URL(req.url, `http://${req.headers.host}`);
 
   if (requestUrl.pathname === "/api/discover") {
     await handleDiscover(req, res, requestUrl);
+    return;
+  }
+
+  if (requestUrl.pathname === "/api/profile") {
+    await handleProfile(req, res, requestUrl);
     return;
   }
 

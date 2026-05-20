@@ -74,6 +74,44 @@
         <p>每張卡都能直接記錄內部狀態與備註，資料只存在你的瀏覽器。</p>
       </section>
 
+      <div class="manual-add">
+        <button type="button" id="manualAddToggle" class="manual-add-toggle">+ 手動加入創作者</button>
+        <form id="manualAddForm" class="manual-add-form" hidden>
+          <input
+            type="text"
+            id="manualAddUrl"
+            placeholder="貼 IG 或 Threads 個人頁網址（例如 https://www.instagram.com/handle/）"
+            autocomplete="off"
+          />
+          <button type="submit" class="primary-action manual-add-submit">加入工作台</button>
+          <button type="button" id="manualAddCancel" class="link-btn">取消</button>
+          <p id="manualAddStatus" class="manual-add-status" hidden></p>
+        </form>
+      </div>
+
+      <div class="workspace-toolbar">
+        <div class="view-toggle" role="tablist" aria-label="檢視模式">
+          <button type="button" role="tab" class="view-toggle-item active" data-view="cards" aria-selected="true">卡片牆</button>
+          <button type="button" role="tab" class="view-toggle-item" data-view="pipeline" aria-selected="false">Pipeline 看板</button>
+        </div>
+        <div class="toolbar-controls">
+          <label class="control-field">
+            <span>排序</span>
+            <select id="sortBy">
+              <option value="match">配對度（預設）</option>
+              <option value="score">分數高 → 低</option>
+              <option value="followers">粉絲多 → 少</option>
+              <option value="updated">最近更新</option>
+              <option value="name">名稱 A → Z</option>
+            </select>
+          </label>
+          <div class="export-row">
+            <button id="copyCsv" type="button" class="secondary-action">複製 CSV</button>
+            <button id="downloadCsv" type="button" class="secondary-action">下載 CSV</button>
+          </div>
+        </div>
+      </div>
+
       <div id="statusFilter" class="status-filter">
         <button type="button" class="status-chip active" data-status="all">全部 <span class="count" data-count="all">0</span></button>
         <button type="button" class="status-chip" data-status="priority">優先接洽 <span class="count" data-count="priority">0</span></button>
@@ -84,9 +122,14 @@
       <div id="tagFilter" class="status-filter tag-filter">
         <button type="button" class="status-chip" id="courseToggle">只看可談課程合作 <span class="count" data-count="course">0</span></button>
       </div>
+      <div id="tagChips" class="tag-chips" hidden></div>
+
+      <p id="resultCount" class="result-count" hidden></p>
 
       <section id="cardGrid" class="card-grid"></section>
+      <section id="kanban" class="kanban" hidden></section>
     </main>
+    <div id="toast" class="toast" hidden></div>
     <script src="/app.js"></script>
   </body>
   </html>
