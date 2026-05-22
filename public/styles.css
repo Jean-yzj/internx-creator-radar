@@ -4,6 +4,13 @@
   --muted: #596581;
 }
 * { box-sizing: border-box; }
+
+/* The HTML `hidden` attribute defaults to `display: none` via UA stylesheet,
+ * which loses to any author rule that sets `display` (e.g. `.overlay
+ * { display: flex }`). Force `hidden` to win — otherwise modals like
+ * #passwordModal stay in the DOM with duplicate password inputs that
+ * break autofill and the login form. */
+[hidden] { display: none !important; }
 body {
   margin: 0;
   font-family: "Avenir Next", "Noto Sans TC", "PingFang TC", sans-serif;
