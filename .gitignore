@@ -39,3 +39,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Runtime team state (sessions, users, creator labels, activity log)
+/data/state.json
+/data/state.json.tmp
+/data/state.json.pid

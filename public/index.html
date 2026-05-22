@@ -6,8 +6,30 @@
     <title>InternX Creator Radar</title>
     <link rel="stylesheet" href="/styles.css" />
   </head>
-  <body>
-    <main class="shell">
+  <body data-auth="loading">
+    <header id="topbar" class="topbar" hidden>
+      <div class="topbar-inner">
+        <div class="brand">
+          <span class="brand-dot"></span>
+          <span class="brand-text">InternX · Creator Radar</span>
+        </div>
+        <div class="topbar-actions">
+          <a id="exportCsvBtn" class="topbar-btn" href="/api/export.csv" download>匯出 CSV</a>
+          <button id="activityBtn" type="button" class="topbar-btn">
+            <span>最近動態</span>
+            <span id="activityBadge" class="topbar-badge" hidden>0</span>
+          </button>
+          <div class="me-badge">
+            <span id="meName" class="me-name"></span>
+            <span id="meRole" class="role-pill"></span>
+            <button id="changePasswordBtn" type="button" class="link-btn">改密碼</button>
+            <button id="logoutBtn" type="button" class="link-btn">登出</button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="shell" id="appShell" hidden>
       <section class="hero">
         <div class="hero-card">
           <span class="eyebrow">InternX Internal Tool</span>
@@ -18,7 +40,7 @@
           <div class="metric-card"><span>候選名單</span><strong id="metric-total">0</strong><p>整合種子名單與搜尋排序</p></div>
           <div class="metric-card"><span>區間內粉絲</span><strong id="metric-range">0</strong><p>符合 1K - 50K 或待人工複核</p></div>
           <div class="metric-card"><span>可談課程合作</span><strong id="metric-course">0</strong><p>有課程、工作坊或顧問服務訊號</p></div>
-          <div class="metric-card"><span>優先接洽</span><strong id="metric-priority">0</strong><p>依本機儲存的 BD 狀態統計</p></div>
+          <div class="metric-card"><span>優先接洽</span><strong id="metric-priority">0</strong><p>整個團隊共用的 BD 狀態統計</p></div>
         </div>
       </section>
 
@@ -71,7 +93,7 @@
           <span class="eyebrow">Workspace</span>
           <h2>合作名單工作台</h2>
         </div>
-        <p>每張卡都能直接記錄內部狀態與備註，資料只存在你的瀏覽器。</p>
+        <p>每張卡都能直接記錄內部狀態與備註，所有改動會跨裝置同步給整個團隊。</p>
       </section>
 
       <div id="statusFilter" class="status-filter">
@@ -87,6 +109,73 @@
 
       <section id="cardGrid" class="card-grid"></section>
     </main>
+
+    <aside id="activityDrawer" class="drawer" hidden aria-hidden="true">
+      <div class="drawer-head">
+        <h3>最近動態</h3>
+        <button id="closeActivity" type="button" class="link-btn">關閉</button>
+      </div>
+      <p class="drawer-hint">記錄整個團隊在 Creator Radar 的標註與備註修改。</p>
+      <div class="drawer-filters">
+        <label class="drawer-filter">
+          <span>成員</span>
+          <select id="activityFilterUser"><option value="">所有人</option></select>
+        </label>
+        <label class="drawer-filter">
+          <span>Creator</span>
+          <input id="activityFilterHandle" type="search" list="activityHandleList" placeholder="@handle 或留空" autocomplete="off" />
+          <datalist id="activityHandleList"></datalist>
+        </label>
+        <button id="activityFilterClear" type="button" class="link-btn">清除篩選</button>
+      </div>
+      <div id="activityList" class="activity-list"></div>
+    </aside>
+    <div id="drawerScrim" class="drawer-scrim" hidden></div>
+
+    <div id="passwordModal" class="overlay modal-overlay" hidden>
+      <form id="passwordForm" class="login-card" autocomplete="off">
+        <span class="eyebrow">帳號設定</span>
+        <h2>改密碼</h2>
+        <p>改完之後所有裝置上的登入會被踢掉，需要用新密碼重新登入。</p>
+        <label>
+          <span>目前的密碼</span>
+          <input id="pwCurrent" name="current-password" type="password" required autocomplete="current-password" />
+        </label>
+        <label>
+          <span>新密碼（至少 6 字）</span>
+          <input id="pwNew" name="new-password" type="password" required minlength="6" autocomplete="new-password" />
+        </label>
+        <label>
+          <span>再輸入一次新密碼</span>
+          <input id="pwConfirm" name="new-password-confirm" type="password" required minlength="6" autocomplete="new-password" />
+        </label>
+        <p id="pwError" class="login-error" hidden></p>
+        <div class="modal-actions">
+          <button type="button" id="pwCancel" class="topbar-btn">取消</button>
+          <button type="submit" id="pwSubmit" class="primary-action">更新密碼</button>
+        </div>
+      </form>
+    </div>
+
+    <div id="loginOverlay" class="overlay" hidden>
+      <form id="loginForm" class="login-card" autocomplete="on">
+        <span class="eyebrow">InternX 內部工具</span>
+        <h2>登入 Creator Radar</h2>
+        <p>用團隊發給你的帳號登入。所有 BD 標註與備註會跨裝置同步給整個團隊。</p>
+        <label>
+          <span>帳號</span>
+          <input id="loginUsername" name="username" required autocomplete="username" autocapitalize="none" autocorrect="off" />
+        </label>
+        <label>
+          <span>密碼</span>
+          <input id="loginPassword" name="password" type="password" required autocomplete="current-password" />
+        </label>
+        <p id="loginError" class="login-error" hidden></p>
+        <button type="submit" id="loginSubmit" class="primary-action">登入</button>
+        <p class="login-hint">預設帳號：marketing / ops / ceo（密碼請洽管理員）</p>
+      </form>
+    </div>
+
     <script src="/app.js"></script>
   </body>
-  </html>
+</html>
