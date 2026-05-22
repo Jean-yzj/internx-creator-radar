@@ -37,6 +37,7 @@ const PIPELINE_LABELS = {
   priority: "優先接洽",
   watchlist: "持續追蹤",
   contacted: "已接洽",
+  rejected: "不合適",
 };
 const ROLE_LABELS = { marketing: "行銷", ops: "營運", ceo: "執行長" };
 
@@ -460,7 +461,14 @@ function pipelineFor(profile) {
 
 function profilesMatchingFilter() {
   return mergedProfiles.filter((profile) => {
-    if (activeStatusFilter !== "all" && pipelineFor(profile) !== activeStatusFilter) return false;
+    const pipeline = pipelineFor(profile);
+    // "全部" 隱藏「不合適」— 那些只能在「不合適」分頁下看到。
+    // 其他狀態的 filter 都是精確匹配。
+    if (activeStatusFilter === "all") {
+      if (pipeline === "rejected") return false;
+    } else if (pipeline !== activeStatusFilter) {
+      return false;
+    }
     if (courseOnly && !hasCourseTag(profile)) return false;
     return true;
   });
@@ -470,11 +478,14 @@ function profilesMatchingFilter() {
 
 function renderStatusFilter() {
   if (!elements.statusFilter) return;
-  const counts = { all: mergedProfiles.length, priority: 0, watchlist: 0, contacted: 0, new: 0 };
+  const counts = { all: 0, priority: 0, watchlist: 0, contacted: 0, new: 0, rejected: 0 };
   for (const profile of mergedProfiles) {
     const status = pipelineFor(profile);
     if (counts[status] != null) counts[status] += 1;
   }
+  // 「全部」counter 不含「不合適」— 跟 profilesMatchingFilter 的邏輯一致，
+  // 避免分子分母對不起來。要看不合適請按專屬 chip。
+  counts.all = mergedProfiles.length - counts.rejected;
   elements.statusFilter.querySelectorAll("[data-count]").forEach((el) => {
     el.textContent = String(counts[el.dataset.count] || 0);
   });
@@ -594,7 +605,7 @@ function renderCards() {
         )
         .join("");
       return `
-      <article class="card" data-handle="${key}">
+      <article class="card" data-handle="${key}" data-pipeline="${pipeline}">
         <div class="card-top">
           <div>
             <div class="platform-row">${badges}</div>
@@ -623,6 +634,7 @@ function renderCards() {
               <option value="priority" ${pipeline === "priority" ? "selected" : ""}>${PIPELINE_LABELS.priority}</option>
               <option value="watchlist" ${pipeline === "watchlist" ? "selected" : ""}>${PIPELINE_LABELS.watchlist}</option>
               <option value="contacted" ${pipeline === "contacted" ? "selected" : ""}>${PIPELINE_LABELS.contacted}</option>
+              <option value="rejected" ${pipeline === "rejected" ? "selected" : ""}>${PIPELINE_LABELS.rejected}</option>
             </select>
           </div>
           <div class="mini-field">
@@ -714,9 +726,13 @@ async function saveCreator(handle, patch) {
   if (patch.pipeline !== undefined) {
     renderMetrics();
     renderStatusFilter();
-    if (activeStatusFilter !== "all" || courseOnly) renderCards();
+    // Always re-render on pipeline change: "不合適" must disappear from
+    // 「全部」immediately, and other pipeline transitions affect filtered
+    // views. Cheap enough at this scale.
+    renderCards();
+  } else {
+    updateCardStamp(handle);
   }
-  updateCardStamp(handle);
   setSavingState(handle, "pending");
 
   try {

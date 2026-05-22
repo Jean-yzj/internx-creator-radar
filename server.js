@@ -34,7 +34,7 @@ const PORT = Number(process.env.PORT || 3000);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const publicDir = path.join(__dirname, "public");
 
-const ALLOWED_PIPELINES = new Set(["new", "priority", "watchlist", "contacted"]);
+const ALLOWED_PIPELINES = new Set(["new", "priority", "watchlist", "contacted", "rejected"]);
 
 function sendJson(res, payload, statusCode = 200, extraHeaders = {}) {
   res.writeHead(statusCode, {

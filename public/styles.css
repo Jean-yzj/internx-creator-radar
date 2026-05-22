@@ -168,6 +168,42 @@ textarea, input, select {
   .action-row, .results-header, .card-top, .stat-row, .link-row { flex-direction:column; align-items:stretch; }
 }
 
+/* ---------- "不合適" rejected pipeline ---------- */
+/* Cards marked rejected stay readable but visually de-prioritised so the
+ * active BD work isn't competing with them. The dedicated filter chip can
+ * pull them back into focus when needed. */
+.card[data-pipeline="rejected"] {
+  opacity: 0.55;
+  background: rgba(255,255,255,0.55);
+  border-style: dashed;
+}
+.card[data-pipeline="rejected"]:hover { opacity: 0.85; }
+.card[data-pipeline="rejected"] h3,
+.card[data-pipeline="rejected"] .score-pill { color: #6c7791; }
+.card[data-pipeline="rejected"] .score-pill { background: rgba(16,22,47,0.4); }
+.card[data-pipeline="rejected"] .platform-badge,
+.card[data-pipeline="rejected"] .tag,
+.card[data-pipeline="rejected"] .source-pill { filter: grayscale(0.7); }
+.card[data-pipeline="rejected"]::before {
+  content: "不合適";
+  position: absolute;
+  top: 12px; right: 12px;
+  padding: 4px 10px;
+  background: rgba(89, 101, 129, 0.18);
+  color: #596581;
+  border-radius: 999px;
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .02em;
+}
+.card { position: relative; }
+.status-chip.status-chip-rejected { color: #596581; }
+.status-chip.status-chip-rejected.active {
+  background: #596581;
+  border-color: #596581;
+  color: #fff8ea;
+}
+
 /* ---------- Top bar ---------- */
 .topbar {
   position: sticky; top: 0; z-index: 30;
